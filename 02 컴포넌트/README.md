@@ -39,6 +39,50 @@ import React from 'react';
 import {View. Text} from 'react-native';
 ```
 
+- 새로운 컴포넌트를 선언하는 방법은 두 가지가 있습니다. 첫 번째 방법은 함수로 컴포넌트를 선언하는 것, 두 번째 방법은 클래스로 컴포넌트를 선언하는 것입니다. 가장 많이 사용하는 방법은 함수로 선언하는 것
+- 함수형태로 만드는 컴포넌트는 함수 컴포넌트라고 부릅니다.
+
+> components/Greeting.js
+
+```jsx
+import React from 'react';
+import {View, Text} from 'react-native';
+
+function Greeting() {
+    return (
+        <View>
+            <Text>안녕하세요, 함수 컴포넌트!</Text>
+        </View>
+    );   
+}
+
+export default Greeting;
+```
+
+- 함수로 선언한 컴포넌트에서는 이와 같이 XML 형태로 이루어진 내용을 반환해줘야 합니다. 이 문법을 JSX라고 부릅니다.
+- 최하단의 export default Greeting은 App 컴포넌트에서도 작성한 것처럼 다른 파일에서 이 컴포넌트를 불러올 수 있게 해주는 코드입니다.
+
+> App.js
+
+```jsx 
+import React from 'react';
+import {SafeAreaView} from 'react-native';
+import Greeting from './components/Greeting';
+
+const App = () => {
+    return (
+        <SafeAreaView>
+            <Greeting />
+        </SafeAreaView>
+    );
+};
+
+export default App;
+```
+
+> Metro 실행
+> 
+> yarn ios 또는 yarn android 명령어를 입력했을 때 실행되는 Metro가 꺼져 있다면 yarn ios 또는 yarn android를 한 번 더 입력하세요. IOS 시뮬레이터 또는 안드로이드 에뮬레이터가 켜져 있어도 Metro가 실행 중이 아니라면 앱에 변경이 반영되지 않습니다.
 
 ---
 # Props
