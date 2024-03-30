@@ -358,6 +358,124 @@ const App = () => {
 ---
 # StyleSheet로 컴포넌트에 스타일 입히기 
 
+- 리액트 네이티브에서는 별도의 CSS 파일에 스타일을 작성하지 않고, 자바스크립트 파일 안에 StyleSheet라는 것을 사용합니다. 
+
+```jsx
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: 'black', 
+    color: 'white',
+    borderWidth: 4,
+    borderStyle: 'solid',
+    borderColor: 'blue'
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold'
+  }
+});
+```
+
+- CSS와의 주요 차이점은 다음과 같습니다.
+  - 셀렉터라는 개념이 존재하지 않습니다.
+  - 모든 스타일 속성은 camelCase로 작성해야 합니다.
+  - display 속성은 기본적으로 flex이며, 다른 값은 none 밖에 없습니다.
+  - flexDirection 속성의 기본값은 웹에서는 row이지만, 리낵트 네이티브에서는 column입니다.
+  - 리액트 네이티브에서 스타일링할 떄 숫자 단위는 dp뿐입니다.
+  - background 대신 backgroundColor를 사용해야 합니다.
+  - border 대신 borderWidth, borderStyle, borderColor 등을 따로따로 설정해야 합니다.
+
+> components/Box.js
+
+```jsx
+import React from 'react';
+import {View, StyleSheet} from 'react-native';
+
+function Box() {
+  return <View style={styles.box} />;
+}
+
+const styles = StyleSheet.create({
+  box: {
+    width: 64,
+    height: 64,
+    backgroundColor: 'black',
+  },
+});
+
+export default Box;
+```
+
+- StyleSheet는 react-native 모듈에서 불러와서 사용할 수 있습니다. 
+- 새로운 스타일을 선언할 때는 StyleSheet.create 함수를 사용하며, 그 안에 스타일을 작성합니다. 그리고 특정 컴포넌트에 스타일을 적용할 때는 style Props를 설정하면 됩니다.
+
+> App.js 
+
+```jsx
+import React from 'react';
+import {SafeAreaView} from 'react-native';
+import Box from './components/Box';
+
+const App = () => {
+  return (
+    <SafeAreaView>
+      <Box />
+    </SafeAreaView>
+  );
+};
+
+export default App;
+```
+
+### Props로 컴포넌트 스타일을 커스터마이징하기
+
+#### 부드러운 모서리 구현하기 
+
+> components/Box.js
+
+```jsx
+import React from 'react';
+import {View, StyleSheet} from 'react-native';
+
+function Box(props) {
+  return <View style={[styles.box, styles.rounded]} />;
+}
+
+const styles = StyleSheet.create({
+  box: {
+    width: 64,
+    height: 64,
+    backgroundColor: 'black',
+  },
+  rounded: {
+    borderRadius: 16,
+  }
+});
+
+export default Box;
+```
+
+- 컴포넌트 스타일을 지정할 때 여러 스타일을 적용하고 싶다면 다음과 같이 배열 형태로 설정하면 됩니다.
+
+```jsx
+<View style={[styles.box, styles.rounded]} />
+```
+
+> components/Box.js
+
+```jsx
+import React from 'react';
+import {View, StyleSheet} from 'react-native';
+
+function Box(props) {
+  return <View style={[styles.box, props.rounded ? styles.rounded : null]} />;
+}
+
+...
+```
+
+- 이 코드에서는 props.rounded 값을 참조해 삼항연산자를 통해 이 값이 true면 styles.rounded를 적용하고 그렇지 않다면 null을 설정해 아무 스타일도 적용되지 않도록 처리했습니다.
+
 ---
 # Props로 객체 구조 분해 할당 
 
