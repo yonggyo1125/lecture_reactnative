@@ -84,14 +84,276 @@ export default App;
 > 
 > yarn ios 또는 yarn android 명령어를 입력했을 때 실행되는 Metro가 꺼져 있다면 yarn ios 또는 yarn android를 한 번 더 입력하세요. IOS 시뮬레이터 또는 안드로이드 에뮬레이터가 켜져 있어도 Metro가 실행 중이 아니라면 앱에 변경이 반영되지 않습니다.
 
+- App 컴포넌트를 보면 컴포넌트를 선언할 때 화살표 함수 문법을 사용했습니다.
+
+```jsx 
+const App = () => {
+    (...)
+}
+```
+
+- Greeting 컴포넌트에서는 function 키워드를 사용해 컴포넌트를 선언했습니다.
+
+```jsx 
+function Greeting() {
+    (...)
+}
+```
+
+- 두 방식은 코드 스타일이 다르나 기능적으로는 차이가 없습니다. 화살표 함수 문법을 썼을 때의 장점은, 복잡한 로직 없이 바로 반환하는 코드라면 다음과 같이 중괄호 코드 블록과 return 키워드를 생략할 수 있다는 것
+
+```jsx
+const App = () => {
+    <SafeAreaView>
+        <Greeting />
+    </SafeAreaView>
+};
+```
+
+- 함수 컴포넌트를 만들 때 어떤 방식을 사용하든 상관없습니다. 취향에 따라 마음에 드는 것을 선택하되 일관성 있게만 사용하면 됩니다.
+
 ---
 # Props
+- Props는 properties를 줄인 말로 컴포넌트의 속성을 의미합니다.
+- Props를 사용하면 컴포넌트를 사용할 때 임의의 값을 넣어줄 수 있습니다. 
+
+> components/Greeting.js
+
+```jsx
+import React from 'react';
+import {View, Text} from 'react-native';
+
+function Greeing(props) {
+    return (
+        <View>
+            <Text>안녕하세요 {props.name}</Text>
+        </View>
+    );
+}
+
+export default Greeting;
+```
+
+- 함수에서 props라는 파라미터를 설정하고 기존에 함수 컴포넌트가 있던 부분을 {props.name}으로 교체했습니다. JSX에서는 자바스크립트 표현식을 보여줘야 할 때는 이렇게 중괄호로 감싸어 작성하면 됩니다.
+
+- 여기에서 자바스크립트 표현식은 연산 결과, 함수 호출, 특정 변수 또는 상수를 말합니다. 
+
+```jsx
+function getDifference(a, b) {
+    return a - b;
+}
+
+function Sample() {
+    const value = 'hello';
+    const user = {
+        name: 'John Doe'
+    };
+    
+    return (
+        <View>
+            <Text>{1 + 1}</Text>
+            <Text>{value}</Text>
+            <Text>{user.name}</Text>
+            <Text>{getDifference(5, 4)}</Text>
+        </View>
+    );
+}
+```
+
+- Greeting을 사용할 때 name 값을 적용해 봅시다. 
+
+> components/App.js
+
+```jsx
+import React from 'react';
+import {SafeAreaView} from 'react-native';
+import Greeting from './components/Greeting';
+
+const App = () => {
+    return (
+        <SafeAreaView>
+            <Greeting name="Props" />
+        </SafeAreaView>
+    );
+};
+```
 
 ---
 # defaultProps 
+- 컴포넌트에 Props를 지정하지 않았을 때 사용할 기본값을 설정해주고 싶다면 defaultProps를 사용하면 됩니다.
+
+> components/Greeting.js
+
+```jsx
+import React from 'react';
+import {View, Text} from 'react-native';
+
+function Greeting(props) {
+    return (
+        <View>
+            <Text>안녕하세요 {props.name}!</Text>
+        </View>
+    );
+}
+
+Greeting.defaultProps = {
+    name: '리액트 네이티브',
+};
+
+export default Greeting;
+```
+
+- name의 기본값을 '리액트 네이티브'로 지정했습니다. 코드를 저장하고 실행해 보면 '안녕하세요 리액트 네이티브!'라고 나타납니다.
 
 ---
 # JSX 문법 
+
+## 태그를 열면 반드시 닫아주기 
+
+- 특정 내용을 홑화살괄호로 감싸준 것을 태그라고 부릅니다.  - \<Text\>
+- \<Text\>안녕하세요\</Text\>라는 JSX 코드가 있다면 \<Text\>는 태그의 시작으로 여는 태그이고 \</Text\>는 태그의 끝으로 닫는 태그입니다.
+- 태그를 열었으면 꼭 닫아줘야 합니다. 닫지 않으면 오류가 발생합니다.
+
+## 스스로 닫는 태그 사용하기 
+
+- 여는 태그와 닫는 태그 사이에 별도의 내용을 넣어야 할 필요가 없을 때는 스스로 닫는(Self-closing) 태그를 사용합니다.
+- 다음과 같이 여는 태그의 뒷 부분에 / 문자를 넣으면 별도로 닫는 태그를 입력하지 않아도 됩니다.
+
+```jsx
+<Greeting />
+```
+
+## 반환할 땐 꼭 하나의 태그로 감싸기
+
+- 컴포넌트에서 JSX를 반환할 때는 꼭 하나의 태그로 감싸져 있어야 합니다.
+- 다음과 같은 코드는 오류가 발생합니다.
+
+> components/App.js
+
+```jsx
+import React from 'react';
+import {View, Text} from 'react-native';
+
+function Greeting(props) {
+    return (
+        <View>
+            <Text>안녕하세요 {props.name}!</Text>
+        </View>
+        <Text>Extra Text!</Text>
+    );
+}
+
+Greeting.defaultProps = {
+    name: '리액트 네이티브',
+};
+
+export default Greeting;
+```
+
+- 'Adjacent JSX elements must be wrapped in an enclosing tag'라는 오류가 나타났는데, 이 상황을 해결하는 방법은 두 가지가 있습니다. 
+- 첫 번째 방법은 새로운 View 컴포넌트를 작성해 그 사이에 기존 내용을 넣는 것입니다.
+
+> components/Greeting.js
+
+```jsx
+import React from 'react';
+import {View, Text} from 'react-native';
+
+function Greeting(props) {
+    return (
+        <View>
+            <View>
+                <Text>안녕하세요 {props.name}!</Text>
+            </View>
+            <Text>Extra Text!</Text>
+        </View>
+    );
+}
+
+Greeting.defaultProps = {
+    name: '리액트 네이티브',
+};
+
+export default Greeting;
+```
+
+
+- 하지만 이렇게 해결하면 불필요한 View 컴포넌트를 하나 사용하게 되므로 나중에 레이아웃과 관련해 작업할 때 귀찮은 일이 발생할 수도 있습니다.
+- 이보다 더 좋은 방법은 JSX Fragment를 사용하는 것입니다. 사용 방법은 빈 태그를 사용하면 됩니다.
+
+> components/Greeting.js
+
+```jsx
+import React from 'react';
+import {View, Text} from 'react-native';
+
+function Greeting(props) {
+    return (
+        <>
+            <View>
+                <Text>안녕하세요 {props.name}!</Text>
+            </View>
+            <Text>Extra Text!</Text>
+        </>
+    );
+}
+
+Greeting.defaultProps = {
+    name: '리액트 네이티브',
+};
+
+export default Greeting;
+```
+
+##  JSX 안에서 자바스크립트 표현식을 보여줄 땐 중괄호로 감싸기
+
+- 여는 태그와 닫는 태그 사이에 자바스크립트 표현식을 사용할 때 중괄호를 사용합니다. 
+- 추가로 컴포넌트의 Props를 설정할 떄도 자바스크립트 표현식을 사용해야 한다면 중괄호를 사용해야 합니다.
+
+> components/App.js
+
+```jsx
+import React from 'react';
+import {SafeAreaView} from 'react-native';
+import Greeting from './components/Greeting';
+
+const App = () => {
+    const name = 'JSX';
+    return (
+        <SafeAreaView>
+            <Greeing name={name} />
+        </SafeAreaView>
+    );
+};
+```
+
+- 컴포넌트의 Props를 설정할 때도 자바스크립트 표현식을 사용하는 중괄호로 값을 감싸주면 됩니다. 
+
+## 주석 작성하기 
+
+> components/App.js
+
+```jsx
+import React from 'react';
+import {SafeAreaView} from 'react-native';
+import Greeting from './components/Greeting';
+
+const App = () => {
+    const name = 'JSX';
+    return (
+        <SafeAreaView>
+            {/* 주석을 작성해봅시다. */}
+            <Greeing 
+                name={name} // 이름을 설정하기 
+            />
+        </SafeAreaView>
+    );
+};
+```
+
+- JSX에서 주석을 작성하는 방법
+    - {/* 와 */} 사이에 주석을 넣는 것
+    - // 문자를 사용해 주석을 작성하는 것입니다. JSX의 여는 태그 또는 스스로 닫는 태그에서만 사용할 수 있으며, 이 주석을 작성한 다음에는 꼭 새 줄을 입력해줘야 합니다.
 
 ---
 # StyleSheet로 컴포넌트에 스타일 입히기 
