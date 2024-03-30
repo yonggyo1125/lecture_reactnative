@@ -475,6 +475,90 @@ function Box(props) {
 ```
 
 - 이 코드에서는 props.rounded 값을 참조해 삼항연산자를 통해 이 값이 true면 styles.rounded를 적용하고 그렇지 않다면 null을 설정해 아무 스타일도 적용되지 않도록 처리했습니다.
+- 코드를 조금 더 짧게 작성하고 싶으면 다음과 같이 수정할 수 있습니다. 
+
+```jsx
+<View style={[styles.box, props.rounded && styles.rounded]} />
+```
+
+- 이와 같이 작성하면 props.rounded 값이 true일 때는 styles.rounded 스타일을 적용하고 false일 때는 아무런 스타일도 적용하지 않습니다.
+
+> App.js
+
+```jsx
+import React from 'react';
+import {SafeAreaView} from 'react-native';
+import Box from './components/Box';
+
+const App = () => {
+  return (
+    <SafeAreaView>
+      <Box rounded={true} />
+    </SafeAreaView>
+  );
+};
+```
+
+- Boolean 타입의 Props를 설정할 때는 코드를 다음과 같이 간소화할 수도 있습니다.
+
+```jsx
+<Box rounded />
+```
+
+- 이렇게 Props의 이름민 적어주면 이 값을 true로 설정합니다.
+
+### 다양한 크기 구현하기
+
+> components/Box.js
+
+```jsx
+import React from 'react';
+import {View, StyleSheet} from 'react-native';
+
+function Box(props) {
+  return (
+    <View 
+      style={[styles.box, props.rounded && styles.rounded, sizes[props.size]} 
+     />
+  );
+}
+
+Box.defaultProps = {
+  size: 'medium',
+};
+
+const styles = StyleSheet.create({
+  box: {
+    backgroundColor: 'black',
+  },
+  rounded: {
+    borderRadius: 16,
+  },
+  small: {
+    width: 32,
+    height: 32,
+  },
+  medium: {
+    width: 64, 
+    height: 64,
+  },
+  large: {
+    width: 128,
+    height: 128,
+  }
+});
+
+const sizes = {
+  small: styles.small,
+  medium: styles.medium,
+  large: styles.large,
+};
+
+export default Box;
+```
+
+- small, medium, large 스타일을 준비한 다음, 이 스타일들을 sizes라는 객체에 넣어줬습니다. 그리고 props.size 값을 받아와서 sizes[size]를 조회해 원하는 스타일을 선택했습니다.
+- 추가로 컴포넌트에 size Props가 설정되지 않았을 때는 기본값으로 medium을 사용하도록 defaultProps를 설정했습니다.
 
 ---
 # Props로 객체 구조 분해 할당 
