@@ -560,11 +560,220 @@ export default Box;
 - small, medium, large 스타일을 준비한 다음, 이 스타일들을 sizes라는 객체에 넣어줬습니다. 그리고 props.size 값을 받아와서 sizes[size]를 조회해 원하는 스타일을 선택했습니다.
 - 추가로 컴포넌트에 size Props가 설정되지 않았을 때는 기본값으로 medium을 사용하도록 defaultProps를 설정했습니다.
 
+> App.js
+
+```jsx
+import React from 'react';
+import {SafeAreaView} from 'react-native';
+import Box from './components/Box';
+
+const App = () => {
+  return (
+    <SafeAreaView>
+      <Box rounded={true} size="large" />
+    </SafeAreaView>
+  );
+};
+
+export default App;
+```
+
+### 사각형 색상 변경하기
+
+- color 값은 다양하므로 크기를 위한 Props를 구현할 때처럼 사전에 스타일을 미리 선언하는 방식은 힘듭니다. 그 대신 Props로 받은 값을 스타일로 직접 넣어주면 쉽게 구현할 수 있습니다. 
+
+> components/Box.js
+
+```jsx
+import React from 'react';
+import {View, StyleSheet} from 'react-native';
+
+function Box(props) {
+  return (
+    <View 
+      style={[
+        styles.box,
+        props.rounded && styles.rounded,
+        sizes[props.size],
+        {
+          backgroundColor: props.color,
+        }
+      ]}
+    />
+  );
+}
+
+Box.defaultProps = {
+  size: 'medium',
+  color: 'black',
+};
+
+...
+
+```
+- props.color 값을 사용해 스타일 객체를 직접 만들어 컴포넌트에 스타일을 적용해줬습니다.
+- defaultProps로 color Props를 설정하지 않았다면 기본적으로 검은색을 사용하도록 했습니다.
+
+- 컴포넌트의 색상을 파란색으로 만들기
+
+> App.js
+
+```jsx
+import React from 'react';
+import {SafeAreaView} from 'react-native';
+import Box from './components/Box';
+
+const App = () => {
+  return (
+    <SafeAreaView>
+      <Box rounded={true} size="large" color="blue" />
+    </SafeAreaView>
+  );
+};
+
+export default App;
+```
+
 ---
 # Props로 객체 구조 분해 할당 
 
+- 구조 분해 할당은 함수의 파라미터에서도 활용할 수 있습니다.
+
+> components/Box.js
+
+```jsx
+import React from 'react';
+import {View, StyleSheet} from 'react-native';
+
+function Box({rounded, size, color}) {
+  return (
+    <View 
+      style={[
+        styles.box,
+        rounded && styles.rounded,
+        sizes[size], 
+        {
+          backgroundColor: color,
+        },
+      ]}
+    />
+  );
+}
+
+...
+
+```
+
 ---
 # useState Hook으로 상태 관리하기
+
+- 사용자와의 상호 작용으로 유저 인터페이스에 변화를 줄수 있습니다. 이 작업을 진행하려면 상태를 관리해야 합니다. 
+- 리액트에서 상태를 관리하는 가장 기본적인 방법은 <code>useState</code>라는 함수를 사용하는 것입니다. 
+- 리액트에서는 use로 시작하는 다양한 함수가 내장되어 있는데 이 함수들을 Hook이라고 부릅니다. Hook을 사용하여 상태관리, 최적화, 컴포넌트 작동 흐름 관리 등 다양한 기능을 구현할 수 있습니다. 
+- 그 중에서 useState는 상태 값을 관리하는 함수입니다.
+
+## useState 사용해보기 
+
+```jsx
+import React, {useSate} from 'react';
+```
+
+> App.js
+
+```jsx
+import React, {useState} from 'react';
+import {SafeViewArea} from 'react-native';
+import Box from './components/Box';
+
+const App = () => {
+  const [visible, setVisible] = useState(true);
+  
+  return (
+    <SafeAreaView>
+      <Box rounded={true} size="large" color="blue" />
+    </SafeAreaView>
+  );
+};
+
+export default App;
+```
+
+- useState 함수는 다음과 같이 사용합니다.
+
+```jsx
+const [visible, setVisible] = useState(true);
+```
+
+- 여기에서 visible은 상태 값을 가리킵니다. setVisible은 상태 값을 변경할 수 있는 함수, setVisible(true)를 호출하면 visible 값이 true로 바뀝니다.
+- useState함수에 넣어준 파라미터는 상태 값의 초기값입니다.
+
+## Hook의 규칙 
+
+- Hook은 컴포넌트의 최상위 레벨에서만 사용해야 합니다. 즉, Hook은 조건문이나 반복문 또는 중첩 함수에서 호출되면 안됩니다. 만약 함수의 흐름 중간에 리턴을 하는 경우(early return)에는 Hook은 함수가 리턴되기 전에 사용되어야 합니다. 
+- 여러 Hook을 사용하여 직접 Hook을 만들 수 있습니다. 이를 커스텀(Custom) Hook이라고 부릅니다. react 패키지 외에서 불러오는 Hook은 모두 커스텀 Hook입니다.
+- Hook은 커스텀 Hook 또는 함수 컴포넌트에서만 사용할 수 있습니다. 클래스에서는 사용이 불가능하며, 리액트와 관련없는 일반적인 자바스크립트 함수에서 사용하면 오류가 발생합니다.
+
+## Button 컴포넌트 사용하기 
+
+> App.js
+
+```jsx
+import React, {useState} from 'react';
+import {SafeAreaView, Button} from 'react-native';
+import Box from './components/Box';
+
+const App = () => {
+  const [visible, setVisible] = useState(true);
+  const onPress = () => {
+    setVisible(!visible);
+  };
+  
+  return (
+    <SafeAreaView>
+      <Button title="토글" onPress={onPress} />
+      <Box rounded={true} size="large" color="blue" />
+    </SafeAreaView>
+  );
+};
+
+export default App;
+```
+
+## 조건부 렌더링 구하기
+
+- 조건부 렌더링이란 특정 조건에 따라 다른 결과물을 보여주는 것을 의미합니다. visible 값이 true일 때만 Box 컴포넌트를 보여줘야 하는데, 이를 구현하는 방법은 두 가지가 있습니다.
+- 첫 번째 방법은 삼항연산자를 사용한는 것
+
+> App.js
+
+```jsx
+import React, {useState} fron 'react';
+import {SafeAreaView, Button} from 'react-native';
+import Box from './components/Box';
+
+const App = () => {
+  const [visible, setVisible] = useState(true);
+  
+  const onPress = () => {
+    setVisible(!visible);
+  };
+  
+  return (
+    <SafeAreaView>
+      <Button title="토글" onPress={onPress} />
+      {visible ? <Box rounded={true} size="large" color="blue" /> : null}
+    </SafeAreaView>
+  );
+};
+
+export default App;
+```
+
+- 두 번째 방법은 && 연산자를 사용하는 것
+
+```jsx
+{visible && <Box rounded={true} size="large" color="blue" />
+```
 
 ---
 # 카운터 만들기 
