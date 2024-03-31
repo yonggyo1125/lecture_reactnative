@@ -777,3 +777,179 @@ export default App;
 
 ---
 # 카운터 만들기 
+
+## UI 준비하기 
+- 카운터는 화면의 전체 영역을 사용합니다. 따라서 가장 먼저 해야 하는 작업은 App 컴포넌트의 SafeAreaView가 전체 영역을 사용하도록 설정하는 것
+- 이 작업은 flex 스타일 속성을 1로 설정하면 됩니다.
+
+> App.js 
+
+```jsx
+import React, { useState } from 'react';
+import {SafeAreaView, StyleSheet} from 'react-native';
+
+const App = () => {
+  return (
+    <SafeAreaView style={styles.full}>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  full: {
+    flex: 1,
+  },
+});
+
+export default App;
+```
+
+> flex 스타일 속성을 1로 설정하는 것은 자신이 위치한 곳의 영역을 모두 차지하겠다는 의미
+ 
+- components 디렉토리에 Counter.js 파일을 생성해 다음과 같이 코드를 작성해주세요.
+
+> components/Counter.js
+
+```jsx
+import React from 'react';
+import {View, Text, StyleSheet, Button} from 'react-native';
+
+function Counter() {
+  return (
+    <View style={styles.wrapper}>
+      <View style={styles.numberArea}>
+        <Text style={styles.number}>0</Text>
+      </View>
+      <Button title="+1" />
+      <Button title="-1" />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+  },
+  numberArea: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  number: {
+    fontSize: 72, 
+    fontWeight: 'bold',
+  },
+});
+
+export default Counter;
+```
+
+> 여기에서 alignItems는 가로 정렬을 의미하고 justifyContent는 세로 정렬을 의미합니다. 
+> 만약 이 컴포넌트의 flexDirection을 row로 바꾸면 alignItems가 세로 정렬을 의미하고, justifyContent가 가로 정렬을 의미하게 됩니다. 
+
+> App.js
+
+```jsx
+import React, {useState} from 'react';
+import {SafeAreaView, StyleSheet} from 'react-native';
+import Counter from './components/Counter';
+
+const App = () => {
+  return (
+    <SafeAreaView style={styles.full}>
+      <Counter />
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  full: {
+    flex: 1,
+  }
+});
+
+export default App;
+```
+
+
+## Counter 컴포넌트에 Props 설정하기
+
+- 이 컴포넌트에 총 세가지 Props를 설정할 것입니다.
+  - **count**: 화면 중앙에 보여줄 값입니다.
+  - **onIncrease**: +1 버튼을 눌렀을 때 호출할 함수입니다.
+  - **onDecrease**: -1 버튼을 눌렀을 때 호출할 함수입니다.
+
+> components/Counter.js
+
+```jsx
+import React from 'react';
+import {View, Text, StyleSheet, Button} from 'react-native';
+
+function Counter({count, onIncrease, onDecrease}) {
+  return (
+    <View style={styles.wrapper}>
+      <View style={styles.numberArea}>
+        <Text style={styles.number}>{count}</Text>
+      <View>
+      <Button title="+1" onPress={onIncrease} />
+      <Button title="-1" onPress={onDecrease} />
+    </View>
+  );
+}
+
+...
+
+```
+
+## App에서 상태 관리하기
+
+- App 컴포넌트에서 Counter 컴포넌트에 전달해야 할 상태를 관리해주겠습니다.
+
+```jsx
+import React, { useState } from 'react';
+import {SafeAreaView, StyleSheet} from 'react-native';
+import Counter from './components/Counter';
+
+const App = () => {
+  const [count, setCount] = useState(0);
+  
+  const onIncrease = () => setCount(count + 1);
+  const onDecrease = () => setCount(count - 1);
+  
+  return (
+    <SafeAreaView style={styles.full}>
+      <Counter count={count} onIncrease={onIncrease} onDecrease={onDecrease} />
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  full: {
+    flex: 1,
+  }
+});
+
+export default App;
+
+```
+
+- useState를 사용할 때는 기본값으로 숫자 타입인 0을 넣었습니다.
+
+```jsx
+const [count, setCount] = useState(0);
+```
+
+- 이 값을 변경하는 onIncrease와 onDecrease 함수를 만들었습니다.
+
+```jsx
+const onIncrease = () => setCount(count + 1);
+const onDecrease = () => setCount(count - 1);
+```
+
+- 이를 Counter 컴포넌트에 Props로 전달해줍니다.
+
+```jsx
+<Counter count={count} onIncrease={onIncrease} onDecrease={onDecrease} />
+```
+
+> 컴포넌트에 Props를 설정할 때 레퍼런스의 이름이 Props의 이름과 무조건 같아야 할 필요는 없습니다.
