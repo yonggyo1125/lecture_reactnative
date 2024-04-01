@@ -634,7 +634,145 @@ image: {
 
 - contain은 이미지가 뷰의 크기에 맞춰 커진 반면, center는 원본 이미지 크기 그대로 나타났습니다. 참고로 center는 화면 밀도에 따라 디바이스별로 다른 결과가 나타날 수 있습니다(여백의 크기가 달라질 수 있습니다). 
 
+### 외부 이미지 사용하기
+- Image 컴포넌트로 프로젝트 내에 있는 이미지 외에 인터넷상 이미지도 보여줄 수 있습니다.
+- 외부 이미지를 설정할 때는 다음과 같이 객체에 uri 값을 설정해 source Props로 설정하면 됩니다.
+
+```jsx
+<Image 
+  source={{uri: 'https://via.placeholder.com/105'}}
+  style={styles.image}
+  resizeMode="contain"
+/>
+```
+
+- 이 코드를 볼 때 중괄호가 두 번 겹쳐져 있어서 헷갈일 수도 있습니다. 단순히 객체 타입의 값을 Props에 넣었을 뿐이며 다음의 코드와 동일합니다.
+
+```jsx
+const source = {uri: 'https://via.placeholder.com/150'};
+
+return (
+  <View style={styles.block}>
+    <Image 
+      source={source}
+      style={styles.image}
+      resizeMode="contain"
+    />
+    <Text style={styles.description}>야호! 할일이 없습니다.</Text>
+  </View>
+);
+```
+
+![image13](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/03%20%ED%95%A0%EC%9D%BC%20%EB%AA%A9%EB%A1%9D%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/13.png)
+
+### young_and_happy.png 보여주기 
+
+> components/Empty.js
+
+```jsx 
+import React from 'react';
+import {View, Text, Image, StyleSheet} from 'react-native';
+
+function Empty() {
+  return (
+    <View style={styles.block}>
+      <Image 
+        source={require('../assets/images/young_and_happy.png')}
+        style={styles.image}
+      />
+      <Text style={styles.description}>야호! 할일이 없습니다.</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  block: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  image: {
+    width: 240,
+    height: 179,
+    marginBottom: 16,
+  },
+  description: {
+    fontSize: 24,
+    color: '#9e9e9e',
+  }
+});
+
+export default Empty;
+```
+
+![image14](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/03%20%ED%95%A0%EC%9D%BC%20%EB%AA%A9%EB%A1%9D%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/14.png)
+
+- 안드로이드 시뮬레이터를 자세히 보면 이미지의 배경색은 흰색인 반면 그 뒤의 화면 배경색은 연한 회색인 것을 확인할 수 있습니다. 안드로이드의 배경색은 기본적으로 흰색이 아닌 연한 회색입니다. 안드로이드 앱을 디자인할 때는 이 점에 주의해야 합니다.
+- 이미지와 화면의 배경색 차이가 발생하지 않도록 App 컴포넌트의 block 스타일을 다음과 같이 변경하세요.
+
+> App.js - styles
+
+```jsx
+const styles = StyleSheet.create({
+  block: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+});
+```
+
 ---
 
 # TextInput으로 사용자 키보드 입력받기
 
+- 키보드 입력을 받아낼 때는 <code>TextInput</code>이라는 컴포넌트를 사용합니다. 
+
+> components/AddTodo.js
+ 
+```jsx
+import React from 'react';
+import {View, StyleSheet, TextInput} from 'react-native';
+
+function AddTodo() {
+  return (
+    <View style={styles.block}>
+      <TextInput placeholder="할일을 입력하세요." style={styles.input} />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  block: {
+    height: 64,
+    paddingHorizontal: 16,
+    borderColor: '#bdbdbd',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    justifyContent: 'center'
+  },
+  input: {
+    fontSize: 16,
+    paddingVertical: 8,
+  }
+});
+
+export default AddTodo;
+```
+
+- TextInput 컴포넌트의 placeholder는 컴포넌트에 아무것도 입력하지 않았을 때 보여줄 기본 텍스트입니다. 사용자 입력에 대한 일종의 도움말
+- paddingHorizontal이라는 속성을 block에 적용하였는데, 좌우측 padding 값을 설정하겠다는 의미, 즉, 다음 코드와 동일
+
+```jsx
+paddingLeft: 16,
+paddingRight: 16
+```
+
+- input 부분의 스타일에는 paddingVertical이라는 속성을 설정했는데, 위 아래 padding을 주어진 값으로 설정하겠다는 의미, 즉, 다음 코드와 동일
+
+```jsx
+paddingTop: 16,
+paddingBottom: 16
+```
+
+- input의 padding은 화면에 보이지 않는 영역인데, 설정한 이유는 바로 터치 영역을 늘리기 위해서입니다. 
+- 만약 이를 설정하지 않았다면 텍스트가 있는 곳을 정확히 터치해야 입력을 시작할 수 있습니다. 하지만 이렇게 padding을 설정하면 터치 위치가 텍스트에서 조금 빗나가도 입력을 시작할 수 있습니다.
