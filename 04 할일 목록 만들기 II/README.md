@@ -284,11 +284,277 @@ function App() {
 
 ```
 
+![image1](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/04%20%ED%95%A0%EC%9D%BC%20%EB%AA%A9%EB%A1%9D%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/1.png)
+> TodoList 보여주기
+
+## TodoItem 컴포넌트 만들기
+
+- TodoItem이라는 컴포넌트를 만들어 스타일링도 하고, 나중에 기능을 붙일 수 있도록 해보겠습니다. 
+- components 디렉터리에 TodoItem.js 파일을 생성하세요. 그리고 다음 코드를 작성해보세요.
+
+> components/TodoItem.js
+
+```jsx
+import React from 'react';
+import {View, Text, StyleSheet} from 'react-native';
+
+function TodoItem({id, text, done}) {
+  return (
+    <View style={styles.item}>
+      <View style={styles.circle} />
+      <Text style={styles.text}>{text}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  item: {
+    flexDirection: 'row',
+    padding: 16,
+    alignItems: 'center',
+  },
+  circle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderColor: '#26a69a',
+    borderWidth: 1,
+    marginRight: 16,
+  },
+  text: {
+    flex: 1,
+    fontSize: 16,
+    color: '#212121',
+  },
+});
+
+
+export default TodoItem;
+```
+
+- 이 컴포넌트에서는 id, text, done 값을 Props로 받아옵니다. 지금 당장은 id를 사용하지 않지만 추후 업데이트/삭제를 구현할 때 해당 값이 필요합니다. 또한, done 값에 따라 완료됐을 때는 다른 뷰를 보여줘야 합니다.
+- 방금 만든 컴포넌트를 TodoList에서 불러와 renderItem 부분에서 사용해보세요
+
+> components/TodoList.js
+
+```jsx 
+import React from 'react';
+import {FlatList, View, Text, StyleSheet} from 'react-native';
+import TodoItem from './TodoItem';
+
+function TodoList({todos}) {
+  return (
+    <FlatList 
+      style={styles.list}
+      data={todos}
+      renderItem={(item) => (
+        <TodoItem id={item.id} text={item.text} done={item.done} />
+      )}
+      keyExtractor={item => item.id.toString()}
+    />
+  );
+}
+
+const styles = StyleSheet.create({
+  list: {
+    flex: 1,
+  },
+});
+
+export default TodoList;
+```
+
+![image2](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/04%20%ED%95%A0%EC%9D%BC%20%EB%AA%A9%EB%A1%9D%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/2.png)
+> TodoItem 컴포넌트 스타일링
+
+## 항목 사이에 구분선 보여주기
+
+- TodoItem 컴포넌트와 다른 TodoItem 컴포넌트 사이에 구분선을 보여주는 방법을 알아보겠습니다.
+- 웹에서는 CSS의 & + & 셀렉터를 통해 특정 엘리먼트들 사이에만 테두리를 보여주게 설정할 수 있는데요. 리액트 네이티브에서는 셀렉터 기능이 존재하지 않습니다.
+- 그 대신 FlatList에 ItemSeparatorComponent Props를 지정해 컴포넌트 사이에 구분선을 설정할 수 있습니다.
+
+```jsx
+import React from 'react';
+import {FlatList, View, StyleSheet} from 'react-native';
+import TodoItem from './TodoItem';
+
+function TodoList({todos}) {
+  return (
+    <FlatList 
+      ItemSeparatorComponent={() => <View style={styles.sparator} />}
+      style={styles.list}
+      data={todos}
+      renderItem={(item) => (
+        <TodoItem id={item.id} text={item.text} done={item.done} />
+      )}
+      keyExtractor={item => item.id.toString()}
+    />
+  );
+}
+
+const styles = StyleSheet.create({
+  list: {
+    flex: 1,
+  },
+  sparator: {
+    backgroundColor: '#e0e0e0',
+    height: 1
+  }
+});
+
+export default TodoList;
+```
+
+![image3](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/04%20%ED%95%A0%EC%9D%BC%20%EB%AA%A9%EB%A1%9D%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/3.png)
+> 항목 사이에 구분선 보여주기
+
+## 완료한 항목에 다른 스타일 적용하기
+
+- App 컴포넌트에서 선언한 todos 배열의 첫 번째 항목을 보면 done 값을 true로 설정해 해당 할 일이 완료됐다는 정보를 지니도록 했습니다. 완료 항목과 미완료 항목을 구분할 수 있도록 done 값이 true일 때 다른 스타일을 적용해봅시다.
+- 완료 항목은 좌측 원의 배경색을 채우고 체크 아이콘을 보여줄 것입니다. 아이콘은 assets/check_image/check_white.png 이미지 파일을 사용하겠습니다.
+
+> components/TodoItem.js
+
+```jsx
+import React from 'react';
+import {View, Text, StyleSheet, Image} from 'react-native';
+
+function TodoItem({id, text, done}) {
+  return (
+    <View style={styles.item}>
+      <View style={[styles.circle, done && styles.filled]}>
+        {done && (
+          <Image 
+            source={require('../assets/icons/check_white/check_white.png')}
+          />
+        )}
+      </View>
+      <Text style={[styles.text, done && styles.lineThrough]}>{text}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  item: {
+    flexDirection: 'row', 
+    padding: 16,
+    borderBottomColor: '#e0e0e0',
+    alignItems: 'center',
+  },
+  circle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderColor: '#26a69a',
+    borderWidth: 1,
+    marginRight: 16,
+  },
+  filled: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#26a69a',
+  },
+  text: {
+    flex: 1,
+    fontSize: 16,
+    color: '#212121',
+  },
+  lineThrough: {
+    color: '#9e9e9e',
+    textDecoration: 'line-through',
+  }
+});
+
+export default TodoItem;
+```
+
+![image4](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/04%20%ED%95%A0%EC%9D%BC%20%EB%AA%A9%EB%A1%9D%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/4.png)
+> 완료 항목 구분하기 
+
 ---
 # 새 항목 등록하기
 
+- 이제 App 컴포넌트의 todos 상태에 따라 화면에 할일 항목이 나타납니다. AddTodo 컴포넌트 기능을 마저 구현해 할일을 등록해봅시다.
+- 우선 App 컴포넌트에 onInsert라는 함수를 다음과 같이 구현한 다음, 해당 함수를 AddTodo의 Props로 설정해주세요.
+
+> App.js
+
+```jsx
+...
+
+function App() {
+    const today = new Date();
+    const [todos, setTodos] = useState([
+      {id: 1, text: '작업환경 설정', done: true},
+      {id: 2, text: '리액트 네이티브 기초 공부', done: false},
+      {id: 3, text: '투두리스트 만들어보기', done: false},
+    ]);
+    
+    const onInsert = text => {
+      // 새로 등록할 할목의 id를 구합니다.
+      // 등록된 항목 중에서 가장 큰 id를 구하고, 그 값에 1을 더합니다. 
+      // 만약 리스트가 비어 있다면 1을 id로 사용합니다. 
+      const nextId = todos.length > 0 ? Math.max(...todos.map(todo => todo.id)) + 1 : 1;
+      const todo = {
+        id: nextId,
+        text,
+        done: false
+      };
+      
+      setTodos(todos.concat(todo));
+    };
+    
+    return (
+      <SafeAreaProvider>
+        <SafeAreaView edges={['bottom']} style={styles.block}>
+          <KeyboardAvoidingView 
+            behavior={Platform.select({ios: 'padding'})}
+            style={styles.avoid}>
+             <DateHead date={today} />
+             {todos.length === 0 ? <Empty /> : <TodoList todos={todos} />}
+             <AddTodo onInsert={onInsert} />
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    );
+}
+```
+
+- onInsert 함수를 다 작성했으면 해당 함수를 AddTodo 컴포넌트에서 사용해보세요.
+
+> components/AddTodo.js
+
+```jsx
+...
+
+function AddTodo({onInsert}) {
+  const [text, setText] = useState('');
+  
+  const onPress = () => {
+    onInsert(text);
+    setText('');
+    Keyboard.dismiss();
+  };
+  
+  ...
+}
+
+...
+```
+
+- onInsert를 Props로 받아와서 onPress 함수에서 현재 text 상태를 인자로 넣어 호출하면 됩니다.
+
+![image5](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/04%20%ED%95%A0%EC%9D%BC%20%EB%AA%A9%EB%A1%9D%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/5.png)
+> 새 항목 추가 
+
+> 안드로이드 시뮬레이터에서는 한글 키보드가 기본적으로 등록되어 있지 않습니다. 따라서 영어로 입력하거나 안드로이드 설정에 들어가서 System > Languages & Input > Languages에서 한국어를 추가한 뒤 입력하세요.
+
+
 ---
 # 할일 완료 상태 토글하기 
+
+- 이번에는 할일 완료 상태를 토글하는 기능을 구현해보겠습니다. 토글(Toggle)이란 하나의 값을 다른 값으로 전환하는 것을 의미하는데요. 우리 프로젝트의 경우 done 값을 false → true, true → false로 변경하게 됩니다.
+- 우선 App 컴포넌트에 onToggle이라는 함수를 다음과 같이 작성하고, 해당 함수를 TodoList의 Props로 설정해주세요. 이 함수는 항목의 고유 값인 id를 파라미터로 받아옵니다.
 
 ---
 # 항목 삭제하기 
