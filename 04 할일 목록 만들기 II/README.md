@@ -185,6 +185,105 @@ console.log(nextItems);
 ---
 # todos 상태 만들기 및 FlatList로 항목 화면에 나타내기
 
+## todos 상태 만들기
+- todos 상태는 App 컴포넌트에서 만들겠습니다. 기본으로 보여줄 할일 항목 세 가지도 배열 안에 추가합니다.
+
+> App.js
+
+```jsx
+import React, {useState} from 'react';
+...
+
+function App() {
+    const today = new Date();
+    const [todos, setTodos] = useState([
+      {id: 1, text: '작업환경 설정', done: true},
+      {id: 2, text: '리액트 네이티브 기초 공부', done: false},
+      {id: 3, text: '투두리스트 만들어보기', done: false},
+    ]);
+    
+    ...
+}
+```
+
+- 사용할 할일 항목을 가리키는 객체는 다음 값을 지닙니다.
+    - id: 각 항목의 고유 ID 값
+    - text: 화면에서 보여줄 text 값
+    - done: 할일의 완료 여부를 나타내는 값    
+
+## TodoList 컴포넌트 만들기
+
+- TodoList 컴포넌트를 만들고 해당 컴포넌트 내부에 FlatList를 사용해 여러 항목을 보여주겠습니다. components 디렉터리에 TodoList.js 파일을 생성해 다음과 같이 코드를 작성
+
+> components/TodoList.js
+
+```jsx
+import React from 'react';
+import {FlatList, View, Text, StyleSheet} from 'react-native';
+
+function TodoList({todos}) {
+    return (
+        <FlatList 
+            style={styles.list}
+            data={todos}
+            renderItem={({item}) => (
+                <View>
+                   <Text>{item.text}</Text>
+                </View>
+            )}
+            keyExtractor={item => item.id.toString()} 
+        />
+    );
+}
+
+const styles = StyleSheet.create({
+    list: {
+        flex: 1,
+    },
+});
+
+export default TodoList;
+```
+
+- TodoList 컴포넌트는 todos Props를 받아와서 해당 값을 FlatList의 data Props로 설정해줍니다. 이렇게 data Props를 설정하면 renderItem이라는 함수를 통해 배열 안의 각 원소들 데이터를 가리키는 뷰를 보여줄 수 있습니다.
+- keyExtractor Props는 각 항목의 고유 값을 추출해주는 함수입니다. 현재 프로젝트에서는 각 항목 데이터의 id 값이 항목의 고유 값입니다. 리스트를 렌더링할 때는 고유 값이 있어야 합니다. 고유 값이 존재하지 않는 경우에는 기본적으로 항목의 순서값인 index를 사용합니다. 이 경우 배열 내부에 변동사항이 생기면 UI를 비효율적으로 업데이트합니다. 따라서 성능이 좋지 않으니 주의해주세요. 추가로 고유 값은 문자열 타입이어야 하므로 고유 값이 숫자라면 .toString()을 호출해 문자열로 변환해야 합니다.
+- TodoList 컴포넌트를 다 작성했다면 해당 컴포넌트를 App에서 사용해봅시다. todos 배열의 length가 0일 때는 Empty 컴포넌트를, 그렇지 않을 때는 TodoList 컴포넌트를 보여주도록 코드를 수정해보세요.
+
+> App.js
+
+```jsx
+...
+
+import TodoList from './components/TodoList';
+
+function App() {
+    const today = new Date();
+    
+    const [todos, setTodos] = useState([
+        {id: 1, text: '작업환경 설정', done: true},
+        {id: 2, text: '리액트 네이티브 기초 공부', done: false},
+        {id: 3, text: '투두리스트 만들어보기', done: false},
+    ]);
+    
+    return (
+        <SafeAreaProvider>
+            <SafeAreaView edges=[{'bottom'}] style={styles.block}>
+                <KeyboardAvoidingView
+                    behavior={Platform.select({ios: 'padding', android: undefined})}
+                    style={styles.avoid}>
+                    <DateHead date={today} />
+                    {todos.length === 0 ? <Empty /> : <TodoList todos={todos} />}
+                    <AddTodo />
+               </KeyboardAvoidingView>
+            </SafeAreaView>
+        </SafeAreaProvider>
+    );
+}
+
+...
+
+```
+
 ---
 # 새 항목 등록하기
 
