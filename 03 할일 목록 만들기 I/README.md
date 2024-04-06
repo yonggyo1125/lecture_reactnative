@@ -776,3 +776,457 @@ paddingBottom: 16
 
 - input의 padding은 화면에 보이지 않는 영역인데, 설정한 이유는 바로 터치 영역을 늘리기 위해서입니다. 
 - 만약 이를 설정하지 않았다면 텍스트가 있는 곳을 정확히 터치해야 입력을 시작할 수 있습니다. 하지만 이렇게 padding을 설정하면 터치 위치가 텍스트에서 조금 빗나가도 입력을 시작할 수 있습니다.
+
+![image15](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/03%20%ED%95%A0%EC%9D%BC%20%EB%AA%A9%EB%A1%9D%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/15.png)
+
+- 키보드가 나타났지만 iOS와 안드로이드에서 작동 방식이 조금 다릅니다. iOS는 화면의 하단 부분이 키보드에서 가려지는 반면(좌측), 안드로이드는 화면이 줄어들면서 AddTodo 컴포넌트가 키보드 상단에 나타납니다(우측).
+
+## KeyboardAvoidingView로 키보드가 화면을 가리지 않게 하기
+
+- 텍스트를 입력할 때 키보드가 화면을 가리지 않게 하려면 KeyboardAdvoidingView를 사용해야 합니다.
+- App 컴포넌트의 SafeAreaView 내부에서 다음과 같이 KeyboardAdvoidingView를 사용하세요.
+
+> App.js
+
+```jsx 
+import React from 'react';
+import {StyleSheet, KeyboardAvoidingView, Platform} from 'react-native';
+import DateHead from './components/DateHead';
+import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
+import AddTodo from './components/AddTodo';
+import Empty from './components/Empty';
+
+function App() {
+  const today = new Date();
+  
+  return (
+    <SafeAreaProvider>
+      <SafeAreaView edges={['bottom']} style={styles.block}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.avoid}>
+          <DateHead date={today} />
+          <Empty />
+          <AddTodo />
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </SafeAreaProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  block: {
+    flex: 1, 
+    backgroundColor: 'white',
+  },
+  avoid: {
+    flex: 1,
+  }
+});
+
+export default App;
+```
+
+- KeyboardAvoidingView에서 behavior Props를 통해 이 컴포넌트의 작동 방식을 정의할 수 있습니다. 안드로이드에서는 아무것도 설정하지 않는 것이 잘 작동하는 반면 iOS에서는 값을 설정해야 제대로 작동합니다.
+- 이 코드에서는 Platform을 react-native에서 불러와 Platform.OS를 조회하였는데, 현재 사용중인 OS가 무엇인지 알 수 있습니다. iOS에서는 ios로, 안드로이드에서는 android로 조회됩니다. 이 값을 삼항연산자와 함께 사용해 iOS일 때는 값을 padding으로 설정하고 안드로이드일 때는 undefined로 설정해줬습니다.
+- 해당 Props에는 padding, height, position 값들을 넣을 수 있습니다. 
+  - padding은 키보드가 열렸을 때 하단에 패딩을 설정합니다. height는 뷰의 높이 자체를 변경합니다.
+  - height는 뷰의 높이 자체를 변경합니다.
+  - position은 뷰의 위치를 설정합니다. 
+- 지금 같은 상황에서는 iOS일 때 값을 padding 또는 height로 설정해주어야 잘 작동합니다. 
+- iPhone 시뮬레이터에서 TextInput 컴포넌트를 터치해보세요. 키보다가 기존 화면을 가리지 않고 AddTodo 컴포넌트가 잘 나타나는지 확인
+
+### Platform.OS와 삼상현산자 대신 Platform.select 사용하기
+- 운영 체제에 따라 다른 값을 사용해야 할 때 삼항연산자를 사용해도 좋지만, Platform.select라는 함수를 사용하면 더 깔끔합니다. 객체를 사용해 운영 체제별로 어떤 속성을 적용할지 더욱 명시적인 코드를 작성해 표현할 수 있습니다. 
+- App 컴포넌트 코드의 KeyboardAvoidingView의 behavior 설정 부분을 다음과 같이 수정해보세요.
+
+```jsx
+<KeyboardAvoidingView
+  behavior={Platform..select({ios: 'padding', android: undefined})}
+  style={styles.avoid}>
+```
+
+- 이렇게 작성히면 삼항연산자를 사용한 코드와 동이리하게 작동합니다. 만약 앞의 코드처럼 안드로이드에서는 undefined를 설정하고 싶다면 다음과 같이 생략해도 됩니다.
+
+```jsx
+<KeyboardAvoidingView 
+  behavior={Platform.select({ios: 'padding'})}
+  style={styles.avoid}>
+```
+
+## useState로 텍스트 상태 값 관리하기
+
+> components/AddTodo.js
+
+```jsx
+import React, { useState } from 'react';
+import {View, StyleSheet, TextInput } from 'react-native';
+
+function AddTodo() {
+  const [text, setText] = useState('');
+  
+  console.log(text);
+  
+  return (
+    <View style={styles.block}>
+      <TextInput 
+        placeholder="할일을 입력하세요."
+        style={styles.input}
+        value={text}
+        onChangeText={setText}
+      />
+    </View>
+  );
+}
+
+... 
+
+```
+
+- 이 코드에서는 useState를 사용해 문자열 타입의 text라는 상태를 만들었습니다. 그리고 TextInput 컴포넌트에 value와 onChangeText Props를 설정했습니다.
+- value는 TextInput에서 보여줘야 할 값을 가리킵니다. 이렇게 value 값을 설정하면 추후 사용자 입력이 아닌 다른 경로를 통해 text 값을 임의로 바꾸게 됐을 때 새로운 값을 TextInput에 반영시킬 수 있습니다. (예를 들어, 새로운 항목을 추가한 뒤에는 text 값을 비워야 합니다. setText를 통해서 값을 비웠을 때 TextInput도 마찬가리로 비워집니다.)
+- onChangeText는 사용자가 내용을 수정할 때마다 호출되는 콜백 함수이며, 이 콜백 함수가 호출될 때는 현재 TextInput의 내용을 인자로 넣어서 호출됩니다.
+
+## 커스텀 버튼 만들기 
+- 일반 Button 컴포넌트를 사용하지 않고, 원하는 디자인을 가진 커스텀 버튼을 직접 만들어보겠습니다. 
+- 다음과 같이 View의 Image를 사용해 버튼을 만들어보세요. 사용할 이미지는 add_white.png 입니다. 
+
+> components/AddTodo.js
+
+```jsx
+import React, { useState } from 'react';
+import {View, StyleSheet, TextInput, Image} from 'react-native';
+
+function AddTodo() {
+  const [text, setText] = useState('');
+  
+  return (
+    <View style={styles.block}>
+      <TextInput 
+        placeholder="할일을 입력하세요."
+        style={styles.input}
+        value={text}
+        onChangeText={setText}
+      />
+      <View style={styles.buttonStyle}>
+        <Image source={require('../assets/icons/add_white/add_white.png')} />
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  block: {
+    backgroundColor: 'white',
+    height: 64,
+    paddingHorizontal: 16,
+    borderColor: '#bdbdbd',
+    borderTopWidth: 1,
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 8,
+  },
+  buttonStyle: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 48,
+    height: 48,
+    backgroundColor: '#26a69a',
+    borderRadius: 24,
+  }
+});
+
+export default AddTodo;
+```
+
+- 버튼을 눌렀을 때 효과를 주는 방법은 터치할 수 있는 영역을 다음 컴포넌트 중 하나로 감싸면 됩니다.
+  - **TouchableHighlight**: 터치했을 떄 배경생을 변경합니다.
+  - **TouchableNativeFeedback**: 터치했을 때 안드로이드에서 물결 효과를 보여줍니다. 안드로이드에서만 사용 가능하며, iOS에서 사용 시 오류가 발생합니다.
+  - **TouchableOpacity**: 터치했을 때 투명도를 조정합니다.
+  - **TouchableWithoutFeedback**: 터치했을 때 아무 효과도 적용하지 않습니다.
+
+> components/AddTodo.js
+
+```jsx 
+import React, { useState } from 'react';
+import { 
+  View, 
+  StyleSheet, 
+  TextInput, 
+  Image,
+  TouchableOpacity
+} from 'react-native';
+
+function AddTodo() {
+  const [text, setText] = useState('');
+  
+  return (
+    <View style={styles.block}>
+      <TextInput 
+        placeholder="할일을 입력하세요."
+        style={styles.input}
+        value={text}
+        onChangeText={setText}
+      />
+      <TouchableOpacity activeOpacity={0.5}>
+        <View style={styles.buttonStyle}>
+          <Image 
+            source={require('../assets/icons/add_white/add_white.png')}
+          />
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+...
+
+```
+
+- TouchableOpacity 컴포넌트에서 설정한 activeOpacity Props는 터치했을 때 적용할 투명도입니다. 값을 설정하지 않으면 기본값은 0.2로 설정됩니다.
+- 안드로이드에서는 TouchableOpacity 대신 TouchableNativeFeedback을 사용해봅시다. 이때 주의할 점은 해당 컴포넌트를 iOS에서 사용하면 오류가 발생하기 때문에 조건부 렌더링을 잘 처리해야 합니다. 
+
+> components/AddTodo.js
+
+```jsx
+import React, { useState } from 'react';
+import {
+  View, 
+  StyleSheet,
+  TextInput,
+  Image,
+  TouchableOpacity,
+  Platform, 
+  TouchableNativeFeedback,
+} from 'react-native';
+
+function AddTodo() {
+  const [text, setText] = useState('');
+  
+  return (
+    <View style={styles.block}>
+      <TextInput 
+        placeholder="할일을 입력하세요."
+        style={styles.input}
+        value={text}
+        onChangeText={setText}
+      />
+      {Platform.OS === 'ios' ? (
+        <TouchableOpacity activeOpacity={0.5}>
+          <View style={styles.buttonStyle}>
+            <Image 
+              source={require('../assets/icons/add_white/add_white.png')}
+            />
+          </View>
+        </TouchableOpacity>
+      ) : (
+        <TouchableNativeFeedback>
+          <View style={styles.buttonStyle}>
+            <Image 
+              source={require('../assets/icons/add_white/add_white.png')}
+            />
+          </View>
+        </TouchableNativeFeedback>
+      )}
+    </View>
+  );
+}
+
+...
+
+```
+
+- 코드를 이와 같이 작성하면 안드로이드에서 터치했을 때 물결 효과가 나타납니다. 그런데 지금과 같은 버튼이 사각형이 아닌 원형일 경우 터치했을 때 물결 효과가 원의 바깥까지 나타납니다.
+- 이럴 때는 TouchableNativeFeedback 컴포넌트를 다음과 같이 View 컴포넌트로 감싸고, 해당 컴포넌트에 borderRadius와 overflow 스타일을 설정해주세요. overflow 값을 hidden으로 하면 지정한 영역 외 바깥 영역이 화면에 나타나지 않습니다.
+
+
+> components/AddTodo.js
+
+```jsx
+import React, { useState } from 'react';
+import {
+  View, 
+  StyleSheet,
+  TextInput,
+  Image,
+  TouchableOpacity,
+  Platform, 
+  TouchableNativeFeedback,
+} from 'react-native';
+
+function AddTodo() {
+  const [text, setText] = useState('');
+  
+  return (
+    <View style={styles.block}>
+      <TextInput 
+        placeholder="할일을 입력하세요."
+        style={styles.input}
+        value={text}
+        onChangeText={setText}
+      />
+      {Platform.OS === 'ios' ? (
+        <TouchableOpacity activeOpacity={0.5}>
+          <View style={styles.buttonStyle}>
+            <Image 
+              source={require('../assets/icons/add_white/add_white.png')}
+            />
+          </View>
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.circleWrapper}>
+          <TouchableNativeFeedback>
+            <View style={styles.buttonStyle}>
+              <Image 
+                source={require('../assets/icons/add_white/add_white.png')}
+              />
+            </View>
+          </TouchableNativeFeedback>
+        </View>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  ...
+  
+  circleWrapper: {
+    overflow: 'hidden',
+    borderRadius: 24,
+  },
+});
+
+export default AddTodo;
+```
+
+- 이제 물결 효과가 원 안에서만 나타납니다. 
+- 앞의 코드를 보면 <View style={styles.buttonStyle}>부분을 반복해서 작성하였는데, 이 부분을 리팩토링하겠습니다. 추가로 삼항연산자가 아닌 Platform.select를 사용하는 코드로 전환해보겠습니다.
+
+> components/AddTodo.js
+
+```jsx
+import React, { useState } from 'react';
+import {
+  View, 
+  StyleSheet,
+  TextInput,
+  Image,
+  TouchableOpacity,
+  Platform, 
+  TouchableNativeFeedback,
+} from 'react-native';
+
+function AddTodo() {
+  const [text, setText] = useState('');
+  
+  return (
+    <View style={styles.block}>
+      <TextInput 
+        placeholder="할일을 입력하세요."
+        style={styles.input}
+        value={text}
+        onChangeText={setText}
+      />
+      {Platform.select({
+        ios: <TouchableOpacity activeOpacity={0.5}>{button}</TouchableOpacity>,
+        android: (
+          <View style={styles.circleWrapper}>
+            <TouchableNativeFeedback>{button}</TouchableNativeFeedback>
+          </View>
+        ),
+      })}
+    </View>
+}
+
+...
+
+```
+
+- 이 코드처럼 JSX를 특정 상수에 담아뒀더가 {} 안에 감싸서 여러 번 보여줄 수 있습니다.
+- 이제 버튼을 눌렀을 때 텍스트를 비워보겠습니다. 다음과 같이 onPress라는 함수를 만들어 TouchableOpacity와 TouchableNativeFeedback 컴포넌트에 Props로 설정해 주세요.
+
+> components/AddTodo.js
+
+```jsx
+import React, { useState } from 'react';
+import {
+  View, 
+  StyleSheet,
+  TextInput,
+  Image,
+  TouchableOpacity,
+  Platform, 
+  TouchableNativeFeedback,
+} from 'react-native';
+
+function AddTodo() {
+  const [text, setText] = useState('');
+  
+  const onPress = () => {
+    setText('');
+    Keyboard.dismiss();
+  };
+  
+  return (
+    <View style={styles.block}>
+      <TextInput 
+        placeholder="할일을 입력하세요."
+        style={styles.input}
+        value={text}
+        onChangeText={setText}
+      />
+      {Platform.select({
+        ios: (
+          <TouchableOpacity activeOpacity={0.5} onPress={onPress}>
+            {button}
+          </TouchableOpacity>
+        ),
+        android: (
+          <View style={styles.circleWrapper}>
+            <TouchableNativeFeedback onPress={onPress}>
+              {button}
+            </TouchableNativeFeedback>
+          </View>
+        ),
+      })}
+    </View>
+}
+
+...
+
+```
+
+- onPress 함수에서 Keyboard.dismiss();는 현재 나타난 키보드를 닫습니다.
+
+## TextInput에 onSubmitEditing 및 returnKeyType 설정하기
+
+- 키보드에서 Enter(return)를 눌렀을 때도 onPress 함수를 호출하도록 만들어보겠습니다. 추가로 Enter의 타입도 지정합니다. 
+
+> components/AddTodo.js - TextInput
+
+```jsx
+<TextInput 
+  placeholder="할일을 입력하세요."
+  style={styles.input}
+  value={text}
+  onChangeText={setText}
+  onSubmitEditing={onPress}
+  returnKeyType="done"
+/>
+```
+
+- onSubmitEditing은 Enter를 눌렀을 때 호출되는 함수입니다. returnKeyType은 Enter의 타입을 지정해주는데, 타입에 따라서 Enter 부분에 보이는 설명 또는 아이콘이 바뀝니다. 
+- iOS에서 키보드의 Enter 부분이 done으로 나타났는지 확인해보세요. 만약 iOS의 시스템 언어를 한국어로 바꾸면 done 부분은 자동으로 '완료'라고 번역되어 나타납니다.
+- 안드로이드에서는 체크 아이콘이 나타날 것입니다. 참고로 안드로이드는 returnKeyType을 따로 설정하지 않아도 체크 아이콘이 나타납니다.
+- 텍스트를 입력하고 Enter를 눌러도아도 onPress가 호출되면서 텍스트가 잘 비워집니다. 
+- returnKeyType Props에는 상황에 따라 다음과 같은 값들을 지정할 수 있습니다.
+  - **플랫폼 공통**: done (완료) - go(이동) - next(다음) - search(검색) - send (보내기)
+  - **iOS 전용**: default (기본) - emergency-call (긴급통화) - google (검색) - join(가입) - route(이동) - yahoo (검색)
+  - **안드로이드 전용**: none (일반 Enter) - previous (뒤로)
+- returnKeyType은 키보드가 닫혔다가 다시 열려야 반영되므로 시뮬레이터가 리로드하거나 Enter를 눌러 키보드를 닫은 뒤 다시 열어 확인하면 됩니다. 
+- 그리고 특정 OS 전용 값을 사용하면 지원하지 않는 OS에서는 오류가 발생하므로 Platform.OS에 따라서 조건부 설정을 잘 해줘야 합니다.
