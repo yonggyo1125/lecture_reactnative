@@ -1015,8 +1015,343 @@ function TodoItem({id, text, done, onToggle, onRemove}) {
 - AsyncStorage는 브라우저에서 사용하는 localStorage와도 꽤 비슷합니다. 값을 저장할 때는 문자열 타입으로 저장해야 하며, getItem, setItem, removeItem, clear 등 localStorage에서 사용하는 메서드와 같은 이름을 가진 메서드들도 존재합니다. 
 - localStorage와의 큰 차이점이라면 AsyncStorage는 비동기적으로 작동한다는 것입니다. 값을 조회하거나 설정할 때 Promise를 반환합니다.
 
-## Promise가 무엇인가요?
 
-- Promise는 자바스크립트에서 비동기적 작업을 편하게 관리하도록 도와주는 객체입니다.
+## AsyncStorage 설치하기
+
+- 예전에는 AsyncStorage가 리액트 네이티브 프로젝트에 자체 내장되어 있어서 별도로 설치할 필요가 없었지만, 해당 기능을 커뮤니티에서 유지보수하면서 라이브러리로 분리됐습니다. 따라서 사용하려면 따로 설치해줘야 합니다.
+- 다음 명령어를 사용해 이 라이브러리를 설치하세요.
+
+```
+yarn add @react-native-community/async-storage
+```
+
+- iOS에서는 다시 pod install해줘야 합니다.
+
+```
+cd ios
+pos install
+```
+
+- 설치 후에는 yarn ios, yarn android 명령어를 실행해주세요.
+
+## AsyncStorage의 기본 사용법
+
+- AsyncStorage를 프로젝트에 적용해주겠습니다. 우선 AsyncStorage의 기본 사용법을 알아봅시다.
+
+### 불러오기
+
+- AsyncStorage를 사용하고 싶은 컴포넌트에 다음 코드를 사용해 불러옵니다.
+
+```jsx
+import AsyncStorage from '@react-native-community/async-storage';
+```
+
+### 저장하기
+
+- 특정 값을 저장할 때는 setItem 메서드를 사용합니다.
+
+```javascript
+const save = async () => {
+  try {
+    await AsyncStorage.setItem('key', 'value');
+  } catch (e) {
+    // 오류 예외 처리
+  }
+}
+```
+
+- 값을 저장할 때는 문자열 타입이어야 합니다. 만약 객체 및 배열 타입을 저장하려면 다음과 같이 JSON.stringify 함수를 사용해야 합니다.
+
+```javascript
+await AsyncStorage.setItem('todos', JSON.stringify(todos));
+```
+
+### 불러오기
+
+- 특정 값을 불러올 때는 getItem 메서드를 사용합니다.
+
+```javascript
+const load = async () => {
+  try {
+    const value = await AsyncStorage.getItem('key');
+    // value를 사용하는 코드 
+  } catch (e) {
+    // 오류 예외 처리
+  }
+};
+```
+
+- 만약 객체 및 배열을 불러오려면 JSON.parse 함수를 사용해 문자열을 JSON으로 변환해야 합니다.
+
+```javascript
+const rawTodos = await AsyncStorage.getItem('todos');
+const todos = JSON.parse(rawTodos);
+```
+
+### 초기화하기
+
+- AsyncStorage에 있는 모든 값을 초기화하고 싶다면 다음과 같이 clear 메서드를 사용합니다.
+
+```jsx
+const clearAll = async () => {
+  try {
+    await AsyncStorage.clear();
+  } catch (e) {
+    // 오류 예외 처리
+  }
+};
+```
+
+- 더 많은 API에 관한 정보는 다음 링크를 참고해주세요.
+- https://bit.ly/async-storage-docs
+
+## AsyncStorage 적용하기
+
+- 이제 할일 목록을 AsyncStorage에 저장해 앱을 재시작해도 데이터가 유지되도록 만들어줍시다. 가장 기본적인 방법은 onInsert, onToggle, onRemove 함수에서 setTodos를 호출한 뒤 setItem 메서드도 호출해 데이터를 저장하는 방법입니다.
+
+### useEffect 사용하기
+
+- 이를 수행하기 위해 각 함수를 수정하는 것보다 더 좋은 방법이 있습니다. 바로 useEffect라는 Hook 함수를 사용하는 것입니다. 이 Hook 함수를 사용하면 컴포넌트에서 특정 상태가 바뀔 때마다 원하는 코드를 실행할 수 있습니다. 또한, 컴포넌트가 마운트(가장 처음 화면에 나타남)되거나 언마운트(화면에서 컴포넌트가 사라짐)될 때 원하는 코드를 실행할 수도 있습니다.
+- 우선 특정 상태가 바뀔 때마다 특정 함수를 호출하는 예시를 알아보겠습니다. App 컴포넌트에서 다음과 같이 useEffect를 불러오세요.
+
+> App.js - 상단
+
+```jsx
+import React, { useState, useEffect} from 'react';
+```
+
+- 다음으로 App 컴포넌트의 useState 하단에 다음과 같이 useEffect를 사용해보세요.
+
+> App.js - App 컴포넌트
+
+```jsx
+function App() {
+  const today = new Date();
+
+  const [todos, setTodos] = useState([
+    {id: 1, text: '작업환경 설정', done: true},
+    {id: 2, text: '리액트 네이티브 기초 공부', done: false},
+    {id: 3, text: '투두리스트 만들어보기', done: false},
+  ]);
+
+  useEffect(() => {
+    console.log(todos);
+  }, [todos]);
+
+  ...
+```
+
+- useEffect의 첫 번째 인자에는 주시하고 싶은 값이 바뀌었을 때 호출하고 싶은 함수를 넣습니다. 두 번째 인자에는 주시하고 싶은 값을 배열 안에 넣습니다.
+- useEffect에 등록한 함수는 두 번째 인자의 배열 안에 넣은 값이 바뀔 때도 호출되지만, 컴포넌트가 가장 처음 렌더링됐을 때도 호출됩니다.
+
+### todos 저장하기
+
+- useEffect로 등록한 함수 내부에서 AsyncStorage의 setItem 메서드를 사용합시다.
+
+> App.js
+
+```jsx
+import React, {useState, useEffect} from 'react';
+import {StyleSheet, KeyboardAvoidingView, Platform} from 'react-native';
+import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-community/async-storage';
+
+import DateHead from './components/DateHead';
+import AddTodo from './components/AddTodo';
+import Empty from './components/Empty';
+import TodoList from './components/TodoList';
+
+function App() {
+  const today = new Date();
+
+  const [todos, setTodos] = useState([
+    {id: 1, text: '작업환경 설정', done: true},
+    {id: 2, text: '리액트 네이티브 기초 공부', done: false},
+    {id: 3, text: '투두리스트 만들어보기', done: false},
+  ]);
+
+  // 저장
+  useEffect(() => {
+    async function save() {
+      try {
+        await AsyncStorage.setItem('todos', JSON.stringify(todos));
+      } catch (e) {
+        console.log('Failed to save todos');
+      }
+    }
+  }, [todos]);
+
+  ...
+  
+```
+
+- 코드를 보면 useEffect에 등록한 함수를 async 함수로 만들지 않고 내부에 async 함수를 따로 선언한 다음, 이를 호출해줬습니다.
+- useEffect에 등록한 함수는 async 키워드를 붙이면 안 됩니다. useEffect에는 정리(cleanup)하는 기능이 있는데, 함수에서 Promise를 반환하면 이 기능과 충돌이 나기 때문입니다.
+- 정리 기능은 컴포넌트가 언마운트되거나 컴포넌트가 업데이트되기 전에 특정 코드를 실행할 수 있는 기능으로, useEffect에서 함수 타입의 값을 반환하면 이 기능을 사용할 수 있습니다.
 
 
+```jsx
+useEffect(() => {
+  // 업데이트된 다음에 출력
+  console.log(todos);
+  return () => {
+    // 업데이트되기 전에 출력
+    // 여기서 todos는 업데이트되기 전의 값을 가리킵니다.
+    console.log(todos);
+  }
+}, [todos])
+```
+
+- 추가로 useEffect를 사용해 컴포넌트 마운트 또는 언마운트 시 특정 작업을 하고 싶다면 useEffect의 두 번째 파라미터에 비어있는 배열을 사용하면 됩니다.
+
+```jsx
+useEffect(() => {
+  console.log('컴포넌트가 마운트될 때 출력됨');
+  return () => {
+    console.log('컴포넌트가 언마운트될 때 출력됨');
+  }
+}, [])
+```
+
+### todos 불러오기
+
+- 앱을 가동할 때 AsyncStorage에 저장한 todos를 불러와서 상태를 업데이트해주겠습니다. App이 마운트될 때 useEffect와 AsyncStorage의 getItem 메서드를 사용하면 됩니다.
+
+> App.js - App 컴포넌트
+
+```jsx
+function App() {
+  const today = new Date();
+
+  const [todos, setTodos] = useState([
+    {id: 1, text: '작업환경 설정', done: true},
+    {id: 2, text: '리액트 네이티브 기초 공부', done: false},
+    {id: 3, text: '투두리스트 만들어보기', done: false},
+  ]);
+
+  // 불러오기
+  useEffect(() => {
+    async function load() {
+      try {
+        const rawTodos = await AsyncStorage.getItem('todos');
+        const savedTodos = JSON.parse(rawTodos);
+        setTOdos(savedTodos);
+      } catch (e) {
+        console.log('Failed to load todos');
+      }
+    }
+    load();
+  }, []);
+  
+  // 저장 
+  useEffect(() => {
+    async function save() {
+      try {
+        await AsyncStorage.setItem('todos', JSON.stringify(todos));
+      } catch (e) {
+        console.log('Failed to save todos');
+      }
+    }
+    
+    save();
+  }, [todos]);  
+...
+
+```
+
+- useEffect의 두 번째 배열이 비었으면, 컴포넌트가 마운트될 때 딱 한 번만 함수가 호출됩니다.
+- 데이터를 불러와서 상태를 업데이트하는 코드를 작성할 때는 꼭 기존의 todos를 저장하는 useEffect보다 상단 위치에 코드를 작성해주세요. 저장하는 useEffect가 먼저 있으면 불러오기 기능이 제대로 작동하지 않습니다. useEffect는 등록된 순서대로 작동하는데, 저장하는 useEffect가 먼저 호출되면 todos의 초깃값을 저장해버린 다음에 불러오기가 진행되므로 초깃값만 불러오기 때문입니다.
+- 코드를 저장하고 할일 목록에 변화를 준 다음, 리로드해 데이터가 잘 보존됐는지 확인해보세요.
+
+### AsyncStorage를 사용하는 코드 추상화시키기
+
+- 리액트 네이티브 프로젝트에서 AsyncStorage를 사용할 때는 방금 사용한 것처럼 직접 사용하지 않고 코드를 한번 추상화시켜서 사용할 것이 권장합니다. 그 이유는 추후 key 값이 바뀔 수도 있고, AsyncStorage가 아닌 다른 방식을 통해 데이터를 저장할 수도 있는데 이러한 상황에서 유지보수하기가 더욱 쉬워지기 때문입니다.
+- 프로젝트 최상위 디렉터리에 storages 디렉터리를 만들고, 그 안에 todosStorages.js 파일을 생성하세요.
+
+> storages/todosStorage.js
+
+```jsx
+import AsyncStorage from '@react-native-community/async-storage';
+
+const key = 'todos';
+
+const todosStorage = {
+  async get() {
+    try {
+      const rawTodos = await AsyncStorage.getItem(key);
+      
+      if (!rawTodos) {
+        // 저장된 데이터가 없으면 사용하지 않음
+        throw new Error('No saved todos');
+      }
+      
+      const savedTodos = JSON.parse(rawTodos);
+      return savedTodos;
+    } catch (e) {
+      throw new Error('No saved todos');
+    }
+  },
+  async set(data) {
+    try {
+      await AsyncStorage.setItem(key, JSON.stringify(data));
+    } catch (e) {
+      throw new Error('Failed to save todos');
+    }
+  }
+};
+
+export default todosStorage;
+```
+
+- 이 코드에서는 todosStorage라는 객체를 만들어 해당 객체 내부에 get과 set 메서드를 만들어줬습니다. 추가로 데이터를 불러오거나 저장할 때 사용하는 key 값은 따로 상단에서 상수로 선언해 추후 손쉽게 바꿀 수 있도록 준비해줬습니다.
+- 코드를 작성한 뒤, todosStorage를 App 컴포넌트에서 불러와 사용하세요.
+
+> App.js
+
+```jsx
+...
+
+import todoStorage from './storages/todoStorage';
+
+function App() {
+  const today = new Date();
+
+  const [todos, setTodos] = useState([
+    {id: 1, text: '작업환경 설정', done: true},
+    {id: 2, text: '리액트 네이티브 기초 공부', done: false},
+    {id: 3, text: '투두리스트 만들어보기', done: false},
+  ]);
+
+  useEffect(() => {
+    todosStorage
+      .get()
+      .then(setTodos)
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    todosStorage.set(todos).catch(console.error);
+}, [todos]);
+```
+
+- App 컴포넌트에서는 더 이상 AsyncStorage를 사용하지 않으므로 import 코드를 지워주세요. 그리고 todosStorage를 불러온 다음 useEffect에서 get과 set 메서드를 사용할 때 이번에는 async 함수를 따로 선언하지 않고 Promise를 그대로 사용했습니다. 데이터를 불러오는 부분에서 .then(setTodos)라고 코드를 작성했는데, 데이터를 불러오고 나서 그 결과물을 setTodos의 함수 인자로 넣어 호출하겠다는 의미입니다.
+
+### 안드로이드에서 AsyncStorage 최대 용량 설정하기
+
+- 안드로이드에서 AsyncStorage의 최대 크기는 기본적으로 6MB로 설정되어 있습니다. AsyncStorage에 너무 많은 데이터를 넣는 것을 방지하기 위해서라고 합니다. 이 용량을 초과하면 오류가 발생합니다. 
+- 최대 용량을 늘리려면 android/gradle.properties 파일에 다음 코드를 추가하면 됩니다.
+
+> android/gradle.properties
+
+```properties
+...
+AsyncStorage_db_size_in_MB=10
+```
+
+- 이 코드는 최대 용량을 10MB로 설정합니다. iOS는 최대 용량이 따로 지정되어 있지 않습니다.
+
+
+### AsyncStorage의 제한
+- AsyncStorage는 설정이 매우 간편하고 사용법도 쉽습니다.
+- 하지만 단점은 AsyncStorage에서 다루는 데이터의 규모가 커지면 성능이 떨어집니다. 문자열 타입으로만 저장할 수 있기 때문에 데이터가 많아질수록 속도가 느려집니다. 물론 캐싱 시스템, 스로틀링(throttling), 페이지네이션 구현 등으로 성능을 최적화할 수도 있긴 합니다. 하지만 최적화가 코드 몇 줄 추가하는 것처럼 간단하지는 않을 것입니다. 그리고 검색 또는 정렬 기능이 지원되지 않습니다.
+- 따라서 AsyncStorage는 비교적 소규모 데이터를 다룰 때 사용하는 것이 좋습니다. 데이터의 규모가 커졌을 때 사용할 수 있는 대안으로는 realm와 react-native-sqlite-storage가 있습니다(안드로이드의 AsyncStorage는 이미 SQLite를 사용하긴 하지만, react-native-sqlite-storage를 사용하면 인덱싱 기능을 지원받을 수 있고, 더욱 다양한 방식으로 데이터를 저장하고 조회할 수 있습니다).
