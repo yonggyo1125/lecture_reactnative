@@ -58,8 +58,316 @@ export default App;
 - 웹 페이지는 <a href="https://google.com">구글</a> 같은 태그를 사용해 링크를 클릭하면 해당 주소로 이동하고, 이동 후에는 뒤로가기 버튼을 눌러서 뒤로 이동하고, 다시 앞으로가기 버튼을 눌러서 앞으로 이동할 수 있어요. 웹 브라우저에 탑재된 History 기능이 있어 가능한 일입니다. History는 스택(Stack) 자료구조를 사용해 구현되어 있습니다.
 - 스택 자료구조는 새로운 항목을 추가할 때 맨 위에 쌓이고, 맨 위에 있는 항목을 추출할 수 있습니다. 새로운 주소로 이동할 때는 push하고, 뒤로 갈 때는 pop하는 것이죠. 리액트 네이티브 앱에서는 화면을 전환할 때 브라우저의 History와 비슷한 사용성을 제공하기 위해 네이티브 스택 내비게이터(Native Stack Navigator)를 사용합니다.
 
+![image1](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/1.png)
+> 스택 자료구조
+
+## 네이티브 스택 내비게이터
+
+- 리액트 내비게이션 라이브러리에는 다른 상황에 사용할 수 있는 다양한 내비게이터가 있습니다. 
+- 그 중 네이티브 스택 내비게이터(Native Stack Navigator)는 가장 흔히 사용되며 안드로이드에서는 Fragment를, iOS에서는 UINavigationController를 사용해 일반 네이티브 앱과 정확히 동일한 방식으로 화면을 관리합니다.
+- 네이티브 스택 내비게이터를 사용하기 위해서는 라이브러리를 추가적으로 설치해주어야 합니다.
+
+```
+yarn add @react-navigation/native-stack
+```
+
+- 라이브러리를 설치한 다음에는 화면으로 사용할 컴포넌트 두 개를 만들어볼 텐데 화면 전용 컴포넌트는 screens라는 디렉터리를 만들어 그 안에 저장할 것입니다.
+- 이렇게 screens라는 디렉터리에 컴포넌트를 분류해 저장하면 화면 전용 컴포넌트를 모아서 관리할 수 있기 때문에 편리합니다. 참고로 반드시 screens 디렉터리를 분류할 필요는 없습니다.
+- 첫 번째로 만들 컴포넌트는 HomeScreen입니다.
+
+> screens/HomeScreen.js
+
+```jsx
+import React from 'react';
+import {View, Button} from 'react-native';
+
+function HomeScreen({navigation}) {
+    return (
+        <View>
+            <Button title="Detail 열기" />
+        </View>
+    );
+}
+
+export default HomeScreen;
+```
+
+- 화면 전용 컴포넌트의 이름을 지을 때 꼭 Screen으로 끝날 필요는 없지만, 이렇게 이름을 지어 놓으면 추후 중복되는 컴포넌트 이름 때문에 헷갈리는 일을 방지할 수 있습니다.
+- 예를 들어, 사용자 프로필에 관련한 기능을 구현할 때 ProfileScreen 화면 전용 컴포넌트와 Profile이라는 UI 전용 컴포넌트가 둘 다 열려있어도 어떤 게 화면 전용 컴포넌트인지 에디터에서 쉽게 구분할 있습니다.
+- 지금 이 컴포넌트에 ‘Detail 열기’라는 Button이 있으나 아직 버튼을 눌렀을 때 호출되는 onPress는 설정하지 않았습니다.
+- 그다음 만들 컴포넌트는 DetailScreen입니다. 이 화면은 HomeScreen에 있는 버튼을 눌렀을 때 보일 화면입니다.
+
+> screens/DetailScreen.js
+
+```jsx
+import React from 'react';
+import {View, Text} from 'react-native';
+
+function DetailScreen() {
+    return (
+        <View>
+            <Text>Detail</Text>
+        </View>
+    );
+}
+
+export default DetailScreen;
+```
+
+- 화면 전용 컴포넌트가 모두 준비됐습니다.
+- 네이티브 스택 내비게이터는 createNativeStackNavigator라는 함수를 사용해 만들 수 있습니다.
+- App 컴포넌트를 다음과 같이 수정해주세요.
+
+> App.js
+
+```jsx
+import React from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import HomeScreen from './screens/HomeScreen';
+import DetailScreen from './screens/DetailScreen';
+
+const Stack = createNativeStackNavigator();
+
+function App() {
+    return (
+        <NavigationContainer>
+            <Stack.Navigator initialRouteName="Home">
+                <Stack.Screen name="Home" component={HomeScreen} />
+                <Stack.Screen name="Detail" component={DetailScreen} />
+            </Stack.Navigator>
+        </NavigationContainer>
+    );
+}
+
+export default App;
+```
+
+- createNativeStackNavigator 함수를 사용하면 Stack이라는 객체가 만들어집니다. 이 안에 Stack.Navigator라는 컴포넌트와 Stack.Screen 컴포넌트가 들어있습니다.
+- Stack.Navigator 컴포넌트는 NavigationContainer 사이에 넣어야 정상적으로 작동합니다. 그리고 Stack.Screen 컴포넌트를 사용해 각 화면을 설정할 수 있습니다.
+- 이 컴포넌트에 설정된 name은 화면의 이름을 설정하는 Props입니다. 이 값은 다른 화면으로 이동하거나 현재 화면이 어떤 화면인지 조회할 때 사용합니다(반드시 대문자로 시작할 필요는 없습니다만, 공식 문서에서는 대문자로 시작하는 것을 권장(prefer)하고 있습니다).
+- 코드를 보면 Stack.Navigator에 initialRouteName이라는 Props가 "Home"으로 설정되어 있습니다. 이는 네이티브 스택 내비게이터에서 기본적으로 보여줄 화면의 이름(초기 화면)을 가리킵니다. 만약 이 값을 설정하지 않으면 기본적으로 내비게이터 안에 들어있는 첫 번째 화면(이 경우에는 Home)이 보여집니다.
+
+![image2](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/2.png)
+> 네이티브 스택 내비게이터 설정 후 초기 화면
+
+- Home 타이틀과 버튼이 나타났지만 iOS와 안드로이드에서 타이틀이 보이는 영역이 조금 다르답니다.
+
+## 스크린 이동하기
+
+- 스크린으로 사용된 컴포넌트는 navigation이라는 객체를 Props로 받아올 수 있습니다. 이 객체를 사용해 다음과 같이 다른 화면으로 이동할 수 있습니다.
+
+```
+navigation.navigate('Detail');
+```
+
+- HomeScreen 컴포넌트를 다음과 같이 수정해보세요.
+
+> screens/HomeScreen.js
+
+```jsx
+import React from 'react';
+import {View, Button} from 'react-native';
+
+function HomeScreen({navigation}) {
+    return (
+        <View>
+            <Button
+                title="Detail 열기"
+                onPress={() => navigation.navigate('Detail')}
+            />
+        </View>
+    );
+}
+
+export default HomeScreen;
+```
+
+- Detail 열기 버튼을 눌렀을 때 Detail 화면으로 이동하도록 설정했습니다. 파일을 저장한 후 버튼을 눌러보세요.
+
+![image3](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/3.png)
+> Detail 화면
+
+- 기본적으로, iOS에서는 우측에서 좌측으로 나타나는 효과로 새 화면이 보일 것이고, 안드로이드에서는 아래에서 위로 나타나는 효과로 새 화면이 보일 것입니다.
+- iOS와 안드로이드의 화면을 보면 이번에도 생김새가 조금 다릅니다. iOS에서는 홑화살괄호와 이전 화면의 이름이 함께 보이고, 안드로이드에서는 화살표 아이콘만 있습니다.
+- 네이티브 스택 내비게이터를 사용할 때는 navigate 함수 말고도 push 함수를 사용해 화면 전환할 수 있습니다.
+
+```jsx
+<Button
+    title="Detail 열기"
+    onPress={() => navigation.push('Detail')} 
+/>
+```
+
+## 라우트 파라미터
+
+- 새로운 화면을 보여줄 때 의존해야 하는 어떤 값이 있으면 라우트 파라미터를 설정합니다.
+- 라우트 파라미터는 객체 타입으로 설정합니다. 예를 들어, 계정명이 'john'인 프로필 화면을 보여주고 싶다면 {username: 'john'}으로 파라미터를 설정합니다.
+- id 값이 1인 데이터를 불러와서 화면에 보여주고 싶을 때는 {id: 1}과 같은 형식으로 파라미터를 설정합니다. 참고로 라우트 파라미터 객체에는 값을 1개 이상 담아도 됩니다.
+- 라우트 파라미터를 설정해 화면을 전환할 때는 navigate 또는 push 함수의 두 번째 인자로 객체를 설정해줍니다.
+- navigate 예시
+
+```jsx
+navigation.navigate('Detail', {id: 1})
+```
+
+- push 예시
+
+```jsx
+navigation.push('Detail', {id: 2})
+```
+
+- HomeScreen 컴포넌트를 다음과 같이 수정해보세요.
+
+> screens/HomeScreen.js
+
+```jsx
+import React from 'react';
+import {View, Button} from 'react-native';
+
+function HomeScreen({navigation}) {
+    return (
+        <View>
+            <Button 
+                title="Detail 1 열기"
+                onPress={() => navigation.push('Detail', {id: 1})}
+            />
+            <Button 
+                title="Detail 2 열기"
+                onPress={() => navigation.push('Detail', {id: 2})}
+            />
+            <Button 
+                title="Detail 3 열기"
+                onPress={() => navigation.push('Detail', {id: 3})}
+            />
+        </View>
+    );
+}
+
+export default HomeScreen;
+```
+
+![image4](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/4.png)
+
+- 다음으로 DetailScreen 컴포넌트에서 라우트 파라미터를 조회해 화면에 나타내겠습니다.
+
+> screens/DetailScreen.js
+
+```jsx
+import React from 'react';
+import {View, Text, StyleSheet} from 'react-native';
+
+function DetailScreen({route}) {
+    return (
+        <View style={styles.block}>
+            <Text style={styles.text}>id: {route.params.id}</Text>
+        </View>
+    );
+}
+
+const styles = StyleSheet.create({
+    block: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    text: {
+        fontSize: 48,
+    },
+});
+
+export default DetailScreen;
+```
+
+- 스크린으로 사용된 컴포넌트는 navigation 외에 route라는 Props도 받아옵니다. 이 Props는 객체 타입인데요. 안에는 다음과 같은 정보가 들어있습니다.
+
+```json
+{
+    "key": "Detail-vgDx8-H-8e7oao6a3xJz7",
+    "name": "Detail",
+    "params": {"id": 1}
+}
+```
+
+- key는 화면의 고유 ID로 새로운 화면이 나타날 때 자동으로 생성됩니다.
+- name은 화면의 이름으로 App 컴포넌트에서 네이티브 스택 내비게이터를 설정할 때 지정한 이름입니다.
+- params가 바로 우리가 화면 전환 시 지정한 라우트 파라미터입니다.
+
+- 이제 Home 화면에서 버튼을 각 버튼을 눌렀을 때 화면에 다른 id가 나타나는지 확인해보세요.
+
+![image5](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/5.png)
+> 라우트 파라미터
+
+- 이전에 화면 전환할 때 navigate 함수도 사용할 수 있고, push 함수도 사용할 수 있지만 두 함수는 차이점이 있습니다.
+- DetailScreen 컴포넌트를 사용하겠습니다. 먼저 push 함수를 사용해 화면 전환해 보겠습니다.
+
+> screens/DetailScreen.js
+
+```jsx
+import React from 'react';
+import {View, Text, StyleSheet, Button} from 'react-native';
+
+function DetailScreen({route, navigation}) {
+    return (
+        <View style={styles.block}>
+            <Text style={styles.text}>id: {route.params.id}</Text>
+            <Button 
+                title="다음"
+                onPress={() => navigation.push('Detail', {id: route.params.id + 1})}
+            />
+        </View>
+    );
+}
+
+const styles = StyleSheet.create({
+    block: {
+        flex: 1, 
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    text: {
+        fontSize: 48,
+    }
+});
+
+export default DetailScreen;
+```
+
+![image6](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/6.png)
+> 다음 버튼 
+
+- 버튼을 누르면 새로운 화면이 스택에 쌓여가면서 화면이 전환될 것입니다. 즉, 다음 버튼을 누르면 다른 Detail 화면이 열리고, 안드로이드 하단의 뒤로가기 버튼 또는 타이틀 영역의 뒤로가기 버튼을 누르면 이전 Detail 화면이 열립니다.
+- navigate는 push와 달리 새로 이동할 화면이 현재 화면과 같으면 새로운 화면을 쌓지 않고 파라미터만 변경합니다.
+- 코드를 다음과 같이 변경해보세요. 그리고 앱을 완전히 리로딩(iOS에서는  X + R, 안드로이드에서는 R을 두 번)해 네이티브 스택 내비게이터를 초기화한 후 Detail 화면에 들어가서 다음 버튼을 눌러보세요.
+
+> screens/DetailScreen.js 
+
+```jsx
+import React from 'react';
+import {View, Text, StyleSheet, Button} from 'react-native';
+
+function DetailScreen({route, navigation}) {
+    return (
+        <View style={styles.block}>
+            <Text style={styles.text}>id: {route.params.id}</Text>
+            <Button 
+                title="다음"
+                onPress={() => navigation.navigate('Detail', {id: route.params.id + 1 })}
+            />
+        </View>
+    );
+}
+
+...
+
+```
+
+- 이제 다음 버튼을 눌렀을 때 화면 전환 효과가 나타나지 않고, 다음 버튼을 여러 번 눌러도 뒤로가기 한 번이면 바로 Home 화면으로 이동할 것입니다.
+- 참고로 navigate 함수는 지금 사용하고 있는 네이티브 스택 내비게이터 외에 다른 내비게이터(추후 등장)에도 있지만, push 함수는 네이티브 스택 내비게이터에서만 사용 가능합니다.
+
+
 ---
 # 다양한 내비게이터
 
 ---
-# 내비게시연 Hooks
+# 내비게이션 Hooks
