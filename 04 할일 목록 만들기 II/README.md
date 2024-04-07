@@ -556,8 +556,456 @@ function AddTodo({onInsert}) {
 - 이번에는 할일 완료 상태를 토글하는 기능을 구현해보겠습니다. 토글(Toggle)이란 하나의 값을 다른 값으로 전환하는 것을 의미하는데요. 우리 프로젝트의 경우 done 값을 false → true, true → false로 변경하게 됩니다.
 - 우선 App 컴포넌트에 onToggle이라는 함수를 다음과 같이 작성하고, 해당 함수를 TodoList의 Props로 설정해주세요. 이 함수는 항목의 고유 값인 id를 파라미터로 받아옵니다.
 
+> App.js
+
+```jsx
+...
+function App() {
+  const today = new Date();
+  const [todos, setTodos] = useState([
+    {id: 1, text: '작업환경 설정', done: true},
+    {id: 2, text: '리액트 네이티브 기초 공부', done: false},
+    {id: 3, text: '투두리스트 만들어보기', done: false},
+  ]);
+  
+  
+  const onInsert = text => {
+    // 새로 등록할 항목의 id를 구합니다.
+    // 등록된 항목 중에서 가장 큰 id를 구하고, 그 값에 1을 더합니다.
+    // 만약 리스트가 비어있다면 1을 id로 사용합니다.
+    const nextId =
+      todos.length > 0 ? Math.max(...todos.map(todo => todo.id)) + 1 : 1;
+      const todo = {
+        id: nextId,
+        text,
+        done: false,
+      };
+
+      setTodos(todos.concat(todo));
+  };
+  
+  const onToggle = id => {
+     const nextTodos = todos.map(todo => 
+      todo.id === id ? {...todo, done: !todo.done} : todo,
+  };
+  
+  setTodos(nextTodos);
+  
+  return (
+    <SafeAreaProvider>
+      <SafeAreaView edges={['bottom']} style={styles.block}>
+        <KeyboardAvoidingView 
+          behavior={Platform.select({ios: 'padding'})}
+          style={styles.avoid}>
+          <DateHead date={today} />
+          {todos.length === 0 ? (
+            <Empty />
+          ) : (
+            <TodoList todos={todos} onToggle={onToggle} />
+          )}
+          <AddTodo onInsert={onInsert} />
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    <SafeAreaProvider>
+  );
+}
+
+...
+
+```
+
+- 작성한 onToggle 함수의 특정 항목 업데이트 원리는 odos 배열의 모든 항목에 대해 todo.id 값이 함수의 파라미터로 받아온 id 값과 일치하면 done 값을 반전시키고, 그렇지 않으면 기존 객체를 그대로 유지하겠다는 의미입니다.
+- 이제 TodoList 컴포넌트를 열어 방금 받아온 onToggle 함수를 TodoItem 컴포넌트에 그대로 Props로 전달해주세요.
+
+> components/TodoList.js
+
+```jsx
+import React from 'react';
+import {FlatList, View, StyleSheet} from 'react-native';
+import TodoItem from './TodoItem';
+
+function TodoList({todos, onToggle}) {
+  return (
+    <FlatList 
+      ItemSeparatorComponent={() => <View style={styles.separator} />}
+      style={styles.list}
+      data={todos}
+      renderItem={({item}) => (
+        <TodoItem 
+          id={item.id}
+          text={item.text}
+          done={item.done}
+          onToggle={onToggle}
+        />
+      )}
+      keyExtractor={item => item.id.toString()}
+    />
+  );
+}
+
+...
+
+```
+
+- 다음으로 TodoItem 컴포넌트에서 onToggle을 사용합니다. 
+- 좌측에 체크 아이콘이 나타나는 원을 터치할 수 있는 영역으로 만들 텐데, 그렇게 하기 위해서 필요한 컴포넌트를 TouchableOpacity 컴포넌트로 감싸주겠습니다.
+
+> components/TodoItem.js
+
+```jsx
+import React from 'react';
+import {View, Text, StyleSheet, Image, TouchableOpacity} from 'react-native';
+
+function TodoItem({id, text, done, onToggle}) {
+  return (
+    <View style={styles.item}>
+      <TouchableOpacity onPress={() => onToggle(id)}>
+        <View style={[styles.circle, done && styles.filled]}>
+          {done && (
+            <Image 
+              source={require('../assets/icon/check_white.png')}
+            />
+          )}
+        </View>
+      </TouchableOpacity>
+      <Text style={[styles.text, done && styles.lineThrough]}>{text}</Text>
+    </View>
+  );
+}
+
+...
+
+```
+
+- TouchableOpacity의 onPress 부분을 보면 () => onToggle(id)와 같은 형태로 Props 설정 부분에서 바로 함수를 선언해 넣어줬습니다. 
+- 함수를 만들어 특정 상수 또는 변수에 담지 않고 바로 사용하는 함수를 익명 함수라고 부릅니다. 만약 함수가 간결하고, 사용하는 곳이 한 곳밖에 없다면 앞의 코드처럼 익명 함수를 작성하면 됩니다.
+- 여기서 주의할 점은 절대로 onPress={onToggle(id)}와 같이 코드를 작성하면 안 된다는 점입니다. 이렇게 코드를 작성하면 컴포넌트가 렌더링될 때마다 onToggle이 호출되는 상황이 발생합니다. onToggle이 호출되면 컴포넌트는 또 리렌더링되고, 결국 앱에서 오류가 발생하게 됩니다.
+
+![image6](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/04%20%ED%95%A0%EC%9D%BC%20%EB%AA%A9%EB%A1%9D%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/6.png)
+> 항목 토글하기 
+
 ---
 # 항목 삭제하기 
+
+- 프로젝트의 마지막 기능인 항목을 삭제하는 기능을 구현해봅시다. 다음과 같이 완료한 항목 우측에 삭제 아이콘을 표시하고, 이 아이콘을 누르면 항목을 삭제하게 만들어보겠습니다.
+
+![image7](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/04%20%ED%95%A0%EC%9D%BC%20%EB%AA%A9%EB%A1%9D%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/7.png)
+> 항목 삭제 UI 미리보기
+
+## 벡터 아이콘 사용하기
+
+- 이번에 보여줄 삭제 아이콘은 Image 컴포넌트를 사용하지 않습니다. react-native-vector-icons라는 라이브러리로 벡터 아이콘을 사용해보겠습니다.
+- 벡터 아이콘은 폰트 또는 SVG를 사용해 크기가 조정돼도 아이콘이 흐려지거나 깨지지 않습니다. 모든 해상도에서 또렷하게 나타나며 색상도 쉽게 변경할 수 있습니다.
+- react-native-vector-icons 라이브러리는 오픈 소스로 공개된 벡터 아이콘을 리액트 네이티브 프로젝트에서 간편하게 컴포넌트처럼 사용할 수 있게 해줍니다.
+- 이 라이브러리를 설치해봅시다. 다음 명령어를 입력하세요.
+
+```
+yarn add react-native-vector-icons
+```
+
+- 그리고 iOS와 안드로이드 프로젝트 둘 다 추가해줘야 하는 사항이 있습니다.
+
+### iOS에 react-native-vector-icons 적용하기
+
+- ios 디렉터리로 이동해 pod install 명령어를 입력하세요.
+
+```
+cs ios
+pos install
+```
+
+- ios/TodoApp/Info.plist 파일을 열고 스크롤을 아래로 쭉 내려서 맨 마지막의
+  </dict>를 찾은 뒤, 다음과 같이 UIAppFonts 속성을 추가
+
+```xml
+...
+
+  <key>UIViewControllerBasedStatusBarAppearance</key>
+  <false/>
+  <key>UIAppFonts</key>
+  <array>
+    <string>MaterialIcons.ttf</string>
+  </array>
+</dict>
+</plist>
+```
+
+- plist 파일은 iOS 앱의 프로퍼티 리스트(property list) 파일로 앱의 이름, 아이콘, 버전 등 앱에서 필요한 설정값을 지니고 있습니다. 여기에 추가할 폰트로 어떤 것이 있는지는 node_modules/react-native-vector-icons/Fonts 디렉터리를 열어보거나 다음 링크를 보면 됩니다.
+- https://github.com/oblador/react-native-vector-icons/tree/master/Fonts
+- 다양한 오픈 소스 아이콘이 들어있는 폰트 파일이 있는데요. 파일을 모두 추가할 필요는 없고, 사용하고 싶은 아이콘 종류만 넣으면 됩니다. 우리는 구글에서 디자인한 MaterialIcons만 사용할 것이므로 나머지는 모두 생략하겠습니다.
+- 다 설치했으면 yarn ios 명령어를 다시 한번 입력해주세요.
+
+### 안드로이드에 react-native-vector-icons 적용하기
+
+- 안드로이드에서는 android/app/build.gradle 파일을 열고 맨 아래로 스크롤을 내린 후 다음 텍스트를 추가하세요.
+
+> android/app/build.gradle
+
+```groovy
+...
+
+apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")
+```
+- build.gradle 파일은 안드로이드의 범용 빌드 도구인 Gradle에서 사용하는 파일로 프로젝트의 의존성, 플러그인 및 빌드에 필요한 설정에 대한 정보를 지니고 있습니다.
+- 설치가 끝나면 yarn android 명령어를 다시 한번 입력해주세요.
+
+### 삭제 아이콘 보여주기
+
+- 삭제 아이콘을 보여줍시다. 다음 페이지에 들어가면 react-native-vector-icons에 있는 모든 아이콘을 검색할 수 있습니다.
+-  https://oblador.github.io/react-native-vector-icons
+- 이 페이지에서 delete를 검색하면 MaterialIcons 섹션에 delete 아이콘을 확인할 수 있습니다.
+
+![image8](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/04%20%ED%95%A0%EC%9D%BC%20%EB%AA%A9%EB%A1%9D%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/8.png)
+> react-native-vector-icons에서 delete 검색 
+
+- react-native-vector-icons의 아이콘은 다음과 같이 사용할 수 있습니다.
+
+```jsx
+import icon from 'react-native-vector-icons/MaterialIcons';
+const deleteIcon = <Icon name="delete" size={32} color="red" />;
+```
+
+- import하는 부분의 'react-native-vector-icons/MaterialIcons'에서 MaterialIcons 대신 다른 폰트를 사용할 수도 있습니다. 
+- Icon 컴포넌트의 name 부분에 검색해서 확인한 아이콘의 이름을 넣으면 됩니다. size 및 color Props를 사용해 아이콘의 크기 및 색상을 변경할 수도 있습니다.
+
+> components/TodoItem.js
+
+```jsx
+import React from 'react';
+import {View, Text, StyleSheet, Image, TouchableOpacity} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+function TodoItem({id, text, done, onToggle}) {
+  return (
+    <View style={styles.item}>
+      <TouchableOpacity onPress={() => onToggle(id)}>
+         <View style={[styles.circle, done && styles.filled]}>
+          {done && (
+            <Image 
+              source={require('../assets/icons/check_white/check_white.png')}
+            />
+          )}
+         </View>
+      </TouchableOpacity>
+      <Text style={[styles.text, done && styles.lineThrough]}>{text}</Text>
+      {done ? (
+        <Icon name="delete" size={32} color="red" />
+      ) : (
+        <View style={styles.removePlaceholder} />
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  
+  ...
+  
+  removePlaceholder: {
+    width: 32, 
+    height: 32,
+  }
+});
+
+export default TodoItem;
+```
+
+- 이 코드는 삼항연산자를 사용해 done 값이 true일 때는 아이콘을 보여주고, 그렇지 않을 때는 removePlaceholder라는 스타일을 가진 View를 보여주도록 했습니다. 여기서 removePlaceholder 스타일을 사용한 이유는 아이콘이 보이지 않을 때도 삭제 아이콘이 보일 영역을 미리 차지해 두기 위함입니다.
+- 만약 이 작업을 하지 않으면 항목의 내용이 아주 긴 경우, 토글할 때마다 텍스트가 보이는 영역이 달라질 것입니다.
+
+![image9](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/04%20%ED%95%A0%EC%9D%BC%20%EB%AA%A9%EB%A1%9D%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/9.png)
+> 삭제 아이콘이 나타난 완료 항목 
+
+### 항목 삭제 함수 만들기
+
+- 이제 App 컴포넌트에서 항목을 삭제하는 함수 onRemove를 선언해 이를 TodoList 컴포넌트의 Props로 설정해줍시다. 이 함수는 onToggle처럼 항목의 id 값을 파라미터로 받아옵니다.
+
+> App.js
+
+```jsx
+...
+
+function App() {
+  ...
+  
+  const onRemove = id => {
+    const nextTodos = todos.filter(todo => todo.id !== id);
+    setTodos(nextTodos);
+  };
+  
+  return (
+    <SafeAreaProvider>
+      <SafeAreaView edges={['bottom']} style={styles.block}>
+        <KeyboardAvoidingView
+          behavior={Platform.select({ios: 'padding'})}
+          style={styles.avoid}>
+          <DateHead date={today} />
+          {todos.length === 0 ? (
+            <Empty />
+          ) : (
+            <TodoList todos={todos} onToggle={onToggle} onRemove={onRemove} />
+          )}
+          <AddTodo onInsert={onInsert} />
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </SafeAreaProvider>
+  );
+}
+
+...
+
+```
+
+- 다음으로 이전에 onToggle을 다룬 것처럼 onRemove 함수도 TodoItem에 전달해줍시다. TodoList 컴포넌트를 다음과 같이 수정하세요.
+
+> components/TodoList.js
+
+```jsx
+import React from 'react';
+import {FlatList, View, StyleSheet} from 'react-native';
+import TodoItem from './TodoItem';
+
+function TodoList({todos, onToggle, onRemove}) {
+  return (
+    <FlatList
+      ItemSeparatorComponent={() => <View style={styles.separator} />}
+      style={styles.list}
+      data={todos}
+      renderItem={({item}) => (
+        <TodoItem
+          id={item.id}
+          text={item.text}
+          done={item.done}
+          onToggle={onToggle}
+          onRemove={onRemove}
+        />
+      )}
+      keyExtractor={item => item.id.toString()}
+    />
+  );
+}
+
+...
+
+```
+
+- 삭제 아이콘을 TouchableOpacity 컴포넌트로 감싸고 onPress Props를 설정해주세요.
+
+> components/TodoItem.js
+
+```jsx
+import React from 'react';
+import {View, Text, StyleSheet, Image, TouchableOpacity} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+function TodoItem({id, text, done, onToggle, onRemove}) {
+  return (
+    <View style={styles.item}>
+      <TouchableOpacity onPress={() => onToggle(id)}>
+        <View style={[styles.circle, done && style.filled]}>
+          {done && (
+            <Image 
+              source={require('../assets/icons/check_white/check_white.png')}
+            />
+          )}
+        </View>
+      </TouchableOpacity>
+      <Text style={[styles.text, done && styles.lineThrough]}>{text}</Text>
+      {done ? (
+        <TouchableOpacity onPress={() => onRemove(id)}>
+          <Icon name="delete" size={32} color="red" />
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.removePlaceholder} />
+      )}
+    </View>
+  );  
+}
+
+...
+
+```
+
+### 항목을 삭제하기 전에 한번 물어보기
+
+- 이번에는 항목을 삭제하기 전에 사용자에게 정말 삭제할 건지 물어보는 알림창을 띄워보겠습니다. 리액트 네이티브에 내장되어 있는 Alert라는 API를 통해 구현할 수 있습니다.
+
+> components/TodoItem.js
+
+```jsx
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+function TodoItem({id, text, done, onToggle, onRemove}) {
+  const remove = () => {
+    Alert.alert(
+      '삭제',
+      '정말로 삭제하시겠어요?',
+      [
+        {text: '취소', onPress: () => {}, style: 'cancel'},
+        {
+          text: '삭제',
+          onPress: () => {
+            onRemove(id);
+          },
+          style: 'destructive',
+        },
+      ],
+      {
+        cancelable: true,
+        onDismiss: () => {},
+      },
+    );
+  };
+  
+  return (
+    <View style={styles.item}>
+      <TouchableOpacity onPress={() => onToggle(id)}>
+        <View style={[styles.circle, done && style.filled]}>
+          {done && (
+            <Image 
+              source={require('../assets/icons/check_white/check_white.png')}
+            />
+          )}
+        </View>
+      </TouchableOpacity>
+      <Text style={[styles.text, done && styles.lineThrough]}>{text}</Text>
+      {done ? (
+        <TouchableOpacity onPress={remove}>
+          <Icon name="delete" size={32} color="red" />
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.removePlaceholder} />
+      )}
+    </View>
+  );  
+}
+
+...
+
+```
+
+- Alert.alert 함수의 파라미터는 제목, 내용, 버튼 배열, 옵션 객체 순서입니다. 버튼 배열에 넣는 버튼 객체에는 text 값을 통해 버튼의 이름을 지정할 수 있고, onPress를 통해 버튼이 눌렸을 때 호출할 함수를 설정할 수 있습니다.
+- style은 cancel, default, destructive 값을 설정할 수 있는데 iOS에서만 작동합니
+  - **cancel**: 취소를 의미하며 폰트가 두껍게 나타납니다.
+  - **default**: 기본을 의미하며 기본 버튼(파란색 텍스트)이 나타납니다.
+  - **destructive**: ‘파괴적’인 것을 의미하며 지금과 같이 삭제하는 상황에 적합한 스타일입니다.
+- 참고로 안드로이드는 버튼에 스타일이 적용되지 않습니다. 만약 버튼 스타일을 변경하고 싶다면 Alert처럼 보이는 컴포넌트를 직접 제작해야 합니다.
+- 4번째 파라미터로 넣는 옵션 객체에는 cancelable 값을 통해 안드로이드에서 Alert 박스 바깥 영역을 터치하거나 Back 버튼을 눌렀을 때 Alert가 닫히도록 설정할 수 있습니다. onDismiss는 Alert가 닫힐 때 호출되는 함수입니다.
+
+![image10](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/04%20%ED%95%A0%EC%9D%BC%20%EB%AA%A9%EB%A1%9D%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/10.png)
+> iOS의 Alert
+
+![image11](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/04%20%ED%95%A0%EC%9D%BC%20%EB%AA%A9%EB%A1%9D%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/11.png)
+> 안드로이드의 Alert
 
 ---
 # AsyncStorage로 앱이 꺼져도 데이터 유지하기 
