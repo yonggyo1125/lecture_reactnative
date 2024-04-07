@@ -1009,3 +1009,14 @@ function TodoItem({id, text, done, onToggle, onRemove}) {
 
 ---
 # AsyncStorage로 앱이 꺼져도 데이터 유지하기 
+
+- AsyncStorage는 리액트 네이티브에서 사용할 수 있는 key-value 형식의 저장소입니다.
+- iOS에서는 네이티브 코드로 구현되어 있으며, 안드로이드에서는 네이티브 코드와 SQLite를 기반으로 구현되어 있습니다.
+- AsyncStorage는 브라우저에서 사용하는 localStorage와도 꽤 비슷합니다. 값을 저장할 때는 문자열 타입으로 저장해야 하며, getItem, setItem, removeItem, clear 등 localStorage에서 사용하는 메서드와 같은 이름을 가진 메서드들도 존재합니다. 
+- localStorage와의 큰 차이점이라면 AsyncStorage는 비동기적으로 작동한다는 것입니다. 값을 조회하거나 설정할 때 Promise를 반환합니다.
+
+## Promise가 무엇인가요?
+
+- Promise는 자바스크립트에서 비동기적 작업을 편하게 관리하도록 도와주는 객체입니다.
+
+
