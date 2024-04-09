@@ -458,6 +458,219 @@ export default App;
 
 - 헤더를 커스터마이징하는 두 번째 방법은 화면 컴포넌트에서 navigation.setOptions 함수를 사용하는 것입니다. HomeScreen 컴포넌트를 열어 코드를 다음과 같이 변경해보세요
 
+> screens/HomeScreen.js
+
+```jsx
+import React, {useEffect} from 'react';
+import {View, Button} from 'react-native';
+
+function HomeScreen({navigation}) {
+    useEffect(() => {
+        navigation.setOptions({title: '홈'});
+    }, [navigation]);
+}
+
+export default HomeScreen;
+```
+
+- 여기서 useEffect Hook을 사용했습니다. 이 Hook은 특정 값이 바뀔 때 또는 컴포넌트가 화면에 나타났을 때 우리가 원하는 작업을 할 수 있습니다. 
+- 현재 이 함수의 deps(두 번째 인자에 넣는 배열)에는 navigation이 들어있는데요. 이 객체가 바뀌는 일은 없지만 ESLint(자바스크립트 검사 도구) 규칙상 useEffect 내부에 사용하는 값을 꼭 deps에 넣어야 하기 때문에 포함시켰습니다.
+- 이렇게 하면 컴포넌트가 처음 화면에 나타난 다음에 navgiation.setOptions 함수를 호출해 타이틀 텍스트를 변경합니다. 참고로 useEffect를 통해서 설정한 내비게이션 option은 App 컴포넌트에서 Props를 통해 설정한 option을 덮어쓰게 됩니다.
+- 이번에는 Detail 화면의 타이틀 텍스트를 변경해봅시다. 이 화면의 타이틀 텍스트에는 라우터 파라미터로 받아온 id 값을 포함하며, 라우터 파라미터를 참조할 때도 방금 한 것처럼 App 컴포넌트에서 Props로 설정할 수도 있고 useEffect를 사용해 화면으로 사용하는 컴포넌트에서 직접 설정할 수도 있습니다. 다만 App 컴포넌트에서 Props로 설정할 때 파라미터를 조회하려면 객체가 아닌 객체를 반환하는 함수를 넣어줘야 합니다. 그리고 이 함수는 route와 navigation을 파라미터로 받아올 수 있습니다.
+
+> App.js
+
+```jsx
+import React from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import HomeScreen from './screens/HomeScreen';
+import DetailScreen from './screens/DetailScreen';
+
+const Stack = createNativeStackNavigator();
+
+function App() {
+    return (
+        <NavigationContainer>
+            <Stack.Navigator initialRouteName="Home">
+                <Stack.Screen 
+                    name="Home"
+                    component={HomeScreen}
+                    options={{
+                        title: '홈',
+                    }}
+                />
+                <Stack.Screen 
+                    name="Detail"
+                    component={DetailScreen}
+                    options={({route}) => ({
+                        title: `상세 정보 - ${route.params.id}`,
+                    })}
+                />
+            </Stack.Navigator>
+        </NavigationContainer>
+    );
+}
+
+export default App;
+```
+
+![image8](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/8.png)
+> Detail 타이틀 텍스트 변경
+
+- 이번에는 DetailScreen 컴포넌트에서 내비게이션을 설정해보겠습니다. 이전에 HomeScreen 컴포넌트를 변경한 것과 유사합니다. 
+
+> screens/DetailScreen.js
+
+```jsx
+import React, {useEffect} from 'react';
+import {View, Text, StyleSheet, Button} from 'react-native';
+
+function DetailScreen({route, navigation}) {
+    useEffect(() => {
+        navigation.setOptions({
+            title: `상세 정보 - ${route.params.id}`,
+        });
+    }, [navigation, route.params.id]);
+    
+    return ...
+}
+
+...
+
+```
+
+- 이번에는 useEffect 내에서 route.params.id를 사용하기 때문에 deps 배열에 해당 값도 포함했습니다. App 컴포넌트에서 Detail 화면에 설정한 options를 지워도 정상적으로 타이틀 텍스트가 설정되는지 확인해보세요.
+
+### 헤더 스타일 변경하기
+
+- 헤더의 스타일도 세부적으로 커스터마이징할 수 있습니다. 다음은 Home 화면의 헤더 스타일을 커스터마이징하는 예시 코드입니다.
+- 다음과 같이 코드를 수정해 헤더의 색상을 변경해보세요. 
+
+> App.js
+
+```jsx
+import React from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import HomeScreen from './screens/HomeScreen';
+import DetailScreen from './screens/DetailScreen';
+
+const Stack = createNativeStackNavigator();
+
+function App() {
+    return (
+        <NavigationContainer>
+            <Stack.Navigator initialRouteName="Home">
+                <Stack.Screen
+                    name="Home"
+                    component={HomeScreen}
+                    options={{
+                        title: '홈',
+                        // Header 블록에 대한 스타일
+                        headerStyle: {
+                            backgroundColor: '#29b6f6',
+                        },
+                        // Header의 텍스트 버튼들 색상
+                        headerTintColor: '#ffffff',
+                        headerTitleStyle: {
+                            fontWeight: 'bold',
+                            fontSize: 20,
+                        },
+                    }}
+                />
+                <Stack.Screen
+                    name="Detail"
+                    component={DetailScreen}
+                />
+            </Stack.Navigator>
+        </NavigationContainer>
+    );
+}
+
+export default App;
+```
+
+![image9](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/9.png)
+> 헤더 스타일 변경
+
+### 헤더의 좌측, 타이틀, 우측 영역에 다른 컴포넌트 보여주기 
+
+> App.js
+
+```jsx
+import React from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import HomeScreen from './screens/HomeScreen';
+import DetailScreen from './screens/DetailScreen';
+import {View, Text, TouchableOpacity} from 'react-native';
+
+const Stack = createNativeStackNavigator();
+
+function App() {
+    return (
+        <NavigationContainer>
+            <Stack.Navigator initialRouteName="Home">
+                <Stack.Screen 
+                    name="Home"
+                    ...
+                />
+                <Stack.Screen 
+                    name="Detail"
+                    component={DetailScreen}
+                    options={{
+                        headerLeft: ({onPress}) => (
+                            <TouchableOpacity onPress={onPress}>
+                                <Text>Left</Text>
+                            </TouchableOpacity>
+                        ),
+                        headerTitle: ({children}) => (
+                            <View>
+                                <Text>{children}</Text>
+                            </View>
+                        ),
+                        headerRight: () => (
+                            <View>
+                                <Text>Right</Text>
+                            </View> 
+                        ),
+                    }}
+                />
+            </Stack.Navigator>
+        </NavigationContainer>
+    );
+}
+
+export default App;
+```
+
+- headerLeft, headerTitle, headerRight에 함수 컴포넌트를 넣어 헤더 내부 영역에 보여줄 컴포넌트를 직접 설정할 수 있습니다. 이 세 가지 옵션을 사용하면 우리가 원하는 UI를 마음대로 헤더에 보여줄 수 있습니다.
+- 여기서 headerTitle에 넣은 컴포넌트를 보면 children이라는 Props를 받아오고 있는데, 현재 이 값은 화면의 타이틀을 가리킵니다
+
+![image10](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/10.png)
+> 헤더의 좌측, 타이틀, 우측 영역에 다른 컴포넌트 보여주기
+
+- iOS와 안드로이드의 화면이 다릅니다. 안드로이드에선 좌측에 화살표 아이콘이 나타나고 있습니다. 만약 이 버튼을 없애고 싶다면, headerBackVisible 옵션을 false로 지정하면 됩니다.
+
+> App.js - DetailScreen
+
+```jsx
+<Stack.Screen
+    name="Detail"
+    component={DetailScreen}
+    options={{
+        headerBackVisible: false,
+        headerLeft: ({onPress}) => ( ...
+        ...
+    }}
+    ...
+/>
+```
+
+![image11](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/11.png)
+> 안드로이드에서 화살표 아이콘 없애기
+
 ---
 
 # 다양한 내비게이터
