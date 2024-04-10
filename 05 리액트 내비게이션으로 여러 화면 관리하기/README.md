@@ -671,14 +671,175 @@ export default App;
 ![image11](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/11.png)
 > 안드로이드에서 화살표 아이콘 없애기
 
+### 헤더 숨기기
+
+- 이번에는 헤더가 없는 화면을 만들어보겠습니다. screens 디렉터리에 HeaderlessScreen.js 파일을 생성해 다음과 같이 코드를 작성하세요.
+
+> screens/HeaderlessScreen.js
+
+```jsx
+import React from 'react';
+import {View, Text, Button} from 'react-native';
+
+function HeaderlessScreen({navigation}) {
+    return (
+        <View>
+            <Text>Header가 없네?</Text>
+            <Button onPress={() => navigation.pop()} title="뒤로가기" />
+        </View>
+    );
+}
+
+export default HeaderlessScreen;
+```
+
+- iOS에서는 헤더가 없으면 뒤로 갈 방법이 없어서 뒤로가기를 호출하는 버튼을 추가했습니다.
+- 그다음에는 App에서 화면 설정해주세요.
+
+> App.js
+ 
+```jsx
+import React from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigation} from '@react-navigation/native-stack';
+import HomeScreen from './screens/HomeScreen';
+import DetailScreen from './screens/DetailScreen';
+import {View, Text, TouchableOpacity} from 'react-native';
+import HeaderlessScreen from './screens/HeaderlessScreen';
+
+const Stack = createNativeStackNavigator();
+
+function App() {
+    return (
+        <NavigationContainer>
+            <Stack.Navigator initialRouteName="Home">
+                ...
+                <Stack.Screen
+                    name="Headerless"
+                    component={HeaderlessScreen}
+                    options={{
+                        headerShown: false,
+                    }}
+                />
+            </Stack.Navigator>
+        </NavigationContainer>
+    );
+}
+
+export default App;
+```
+
+- 이제 HomeScreen 컴포넌트를 열어 Headerless 화면을 열어주는 버튼을 만들어주세요.
+
+> screens/HomeScreen.js
+
+```jsx
+import React, {useEffect} from 'react';
+import {View, Button} from 'react-native';
+
+function HomeScreen({navigation}) {
+    useEffect(() => {
+        navigation.setOptions({title: '홈'});
+    }, [navigation);
+    
+    return (
+        <View>
+            ...
+            <Button
+                title="Headerless 열기"
+                onPress={() => navigation.push('Headerless')}
+            />
+        </View>
+    );
+}
+
+export default HomeScreen;
+```
+
+![image12](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/12.png)
+> 헤더가 없는 화면
+
+- 안드로이드에서는 문제없이 잘 나타나는데 iOS에서는 StatusBar 영역을 침범해서 화면이 나타나고 있습니다.
+- 이럴 때는 SafeAreaView 컴포넌트를 사용하면 됩니다.
+- react-navigation에 react-native-safe-area-context가 내장되어 있기 때문에 react-native가 아닌 react-native-safe-area-context에서 불러와도 상관없습니다.
+- HeaderlessScreen을 다음과 같이 수정해보세요.
+
+> screens/HeaderlessScreen.js
+
+```jsx
+import React from 'react';
+import {View, Text, Button} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+
+function HeaderlessScreen({navigation}){
+    return (
+        <SafeAreaView>
+            <View>
+                <Text>Header가 없네?</Text>
+                <Button onPress={() => navigation.pop()} title="뒤로가기" />
+            </View>
+        </SafeAreaView>
+    );
+}
+
+export default HeaderlessScreen;
+```
+
+![image13](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/13.png)
+> SafeAreaView 적용 
+
+- 만약 헤더와 관련한 설정을 특정 화면에만 적용하지 않고, 네이티브 스택 내비게이터에서 관리하는 모든 화면에 넣고 싶다면 Stack.Navigator에 screenOptions라는 Props를 설정하면 됩니다.
+- 이 Props에 넣는 값은 Stack.Screen의 options와 같습니다. 즉, 모든 화면에서 헤더를 없애고 싶다면 다음과 같이 하면 됩니다.
+
+> App.js - Stack.Navigator
+
+```jsx
+<Stack.Navigator 
+    initialRouteName="Home"
+    screenOptions={{
+        headerShown: false,
+    }}>
+...
+
+```
+
+- 헤더를 커스터마이징할 수 있는 설정은 지금까지 설정해본 것 외에도 많습니다. 더 자세한 내용은 공식 문서를 참고
+- https://reactnavigation.org/docs/native-stack-navigator#options
+
+
 ---
 
 # 다양한 내비게이터
+
+## 드로어 내비게이터
+
+- 드로어 내비게이터(Drawer Navigator)는 좌측 또는 우측에 사이드바를 만들고 싶을 때 사용하는 내비게이터입니다.
+- 사이드바를 모바일 앱에서는 드로어(Drawer)라고 부릅니다.
+
+![image14](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/14.png)
+> 드로어 내비게이터
+
+- 내비게이터를 사용하려면 먼저 다음과 같이 라이브러리를 설치하세요.
+
+```
+yarn add @react-navigation/drawer react-native-gesture-handler react-native-reanimated
+cd ios
+pod install
+```
+
+- react-native-gesture-handler는 드로어 내비게이터에서 사용자 제스처를 인식하기 위하여 내부적으로 사용하는 라이브러리입니다.
+- react-native-reanimated는 리액트 네이티브에 내장된 애니메이션 효과 기능보다 더욱 개선된 성능으로 애니메이션 효과를 구현해주는 라이브러리입니다.
+- 설치 이후에는 yarn ios와 yarn android 명령어를 다시 입력하여 시뮬레이터를 다시 시작해주세요.
+- 그다음에는 App 컴포넌트를 열어 코드를 다음과 같이 수정해주세요. 이전에 만든 HomeScreen과 DetailScreen은 더 이상 사용하지 않겠습니다. 이전에 사용한 navigation.push, navigation.pop 같은 기능들은 드로어 내비게이터에서 호환되지 않습니다.
+
+> App.js
+
+```jsx
+
+```
 
 ---
 
 # 내비게이션 Hooks
 
-```
 
-```
