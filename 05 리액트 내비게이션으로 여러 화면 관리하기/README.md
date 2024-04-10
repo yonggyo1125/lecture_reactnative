@@ -461,19 +461,19 @@ export default App;
 > screens/HomeScreen.js
 
 ```jsx
-import React, {useEffect} from 'react';
-import {View, Button} from 'react-native';
+import React, { useEffect } from "react";
+import { View, Button } from "react-native";
 
-function HomeScreen({navigation}) {
-    useEffect(() => {
-        navigation.setOptions({title: '홈'});
-    }, [navigation]);
+function HomeScreen({ navigation }) {
+  useEffect(() => {
+    navigation.setOptions({ title: "홈" });
+  }, [navigation]);
 }
 
 export default HomeScreen;
 ```
 
-- 여기서 useEffect Hook을 사용했습니다. 이 Hook은 특정 값이 바뀔 때 또는 컴포넌트가 화면에 나타났을 때 우리가 원하는 작업을 할 수 있습니다. 
+- 여기서 useEffect Hook을 사용했습니다. 이 Hook은 특정 값이 바뀔 때 또는 컴포넌트가 화면에 나타났을 때 우리가 원하는 작업을 할 수 있습니다.
 - 현재 이 함수의 deps(두 번째 인자에 넣는 배열)에는 navigation이 들어있는데요. 이 객체가 바뀌는 일은 없지만 ESLint(자바스크립트 검사 도구) 규칙상 useEffect 내부에 사용하는 값을 꼭 deps에 넣어야 하기 때문에 포함시켰습니다.
 - 이렇게 하면 컴포넌트가 처음 화면에 나타난 다음에 navgiation.setOptions 함수를 호출해 타이틀 텍스트를 변경합니다. 참고로 useEffect를 통해서 설정한 내비게이션 option은 App 컴포넌트에서 Props를 통해 설정한 option을 덮어쓰게 됩니다.
 - 이번에는 Detail 화면의 타이틀 텍스트를 변경해봅시다. 이 화면의 타이틀 텍스트에는 라우터 파라미터로 받아온 id 값을 포함하며, 라우터 파라미터를 참조할 때도 방금 한 것처럼 App 컴포넌트에서 Props로 설정할 수도 있고 useEffect를 사용해 화면으로 사용하는 컴포넌트에서 직접 설정할 수도 있습니다. 다만 App 컴포넌트에서 Props로 설정할 때 파라미터를 조회하려면 객체가 아닌 객체를 반환하는 함수를 넣어줘야 합니다. 그리고 이 함수는 route와 navigation을 파라미터로 받아올 수 있습니다.
@@ -481,44 +481,45 @@ export default HomeScreen;
 > App.js
 
 ```jsx
-import React from 'react';
-import {NavigationContainer} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import HomeScreen from './screens/HomeScreen';
-import DetailScreen from './screens/DetailScreen';
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import HomeScreen from "./screens/HomeScreen";
+import DetailScreen from "./screens/DetailScreen";
 
 const Stack = createNativeStackNavigator();
 
 function App() {
-    return (
-        <NavigationContainer>
-            <Stack.Navigator initialRouteName="Home">
-                <Stack.Screen 
-                    name="Home"
-                    component={HomeScreen}
-                    options={{
-                        title: '홈',
-                    }}
-                />
-                <Stack.Screen 
-                    name="Detail"
-                    component={DetailScreen}
-                    options={({route}) => ({
-                        title: `상세 정보 - ${route.params.id}`,
-                    })}
-                />
-            </Stack.Navigator>
-        </NavigationContainer>
-    );
+  return (
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Home">
+        <Stack.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{
+            title: "홈",
+          }}
+        />
+        <Stack.Screen
+          name="Detail"
+          component={DetailScreen}
+          options={({ route }) => ({
+            title: `상세 정보 - ${route.params.id}`,
+          })}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 }
 
 export default App;
 ```
 
 ![image8](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/8.png)
+
 > Detail 타이틀 텍스트 변경
 
-- 이번에는 DetailScreen 컴포넌트에서 내비게이션을 설정해보겠습니다. 이전에 HomeScreen 컴포넌트를 변경한 것과 유사합니다. 
+- 이번에는 DetailScreen 컴포넌트에서 내비게이션을 설정해보겠습니다. 이전에 HomeScreen 컴포넌트를 변경한 것과 유사합니다.
 
 > screens/DetailScreen.js
 
@@ -532,7 +533,7 @@ function DetailScreen({route, navigation}) {
             title: `상세 정보 - ${route.params.id}`,
         });
     }, [navigation, route.params.id]);
-    
+
     return ...
 }
 
@@ -545,56 +546,54 @@ function DetailScreen({route, navigation}) {
 ### 헤더 스타일 변경하기
 
 - 헤더의 스타일도 세부적으로 커스터마이징할 수 있습니다. 다음은 Home 화면의 헤더 스타일을 커스터마이징하는 예시 코드입니다.
-- 다음과 같이 코드를 수정해 헤더의 색상을 변경해보세요. 
+- 다음과 같이 코드를 수정해 헤더의 색상을 변경해보세요.
 
 > App.js
 
 ```jsx
-import React from 'react';
-import {NavigationContainer} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import HomeScreen from './screens/HomeScreen';
-import DetailScreen from './screens/DetailScreen';
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import HomeScreen from "./screens/HomeScreen";
+import DetailScreen from "./screens/DetailScreen";
 
 const Stack = createNativeStackNavigator();
 
 function App() {
-    return (
-        <NavigationContainer>
-            <Stack.Navigator initialRouteName="Home">
-                <Stack.Screen
-                    name="Home"
-                    component={HomeScreen}
-                    options={{
-                        title: '홈',
-                        // Header 블록에 대한 스타일
-                        headerStyle: {
-                            backgroundColor: '#29b6f6',
-                        },
-                        // Header의 텍스트 버튼들 색상
-                        headerTintColor: '#ffffff',
-                        headerTitleStyle: {
-                            fontWeight: 'bold',
-                            fontSize: 20,
-                        },
-                    }}
-                />
-                <Stack.Screen
-                    name="Detail"
-                    component={DetailScreen}
-                />
-            </Stack.Navigator>
-        </NavigationContainer>
-    );
+  return (
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Home">
+        <Stack.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{
+            title: "홈",
+            // Header 블록에 대한 스타일
+            headerStyle: {
+              backgroundColor: "#29b6f6",
+            },
+            // Header의 텍스트 버튼들 색상
+            headerTintColor: "#ffffff",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 20,
+            },
+          }}
+        />
+        <Stack.Screen name="Detail" component={DetailScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 }
 
 export default App;
 ```
 
 ![image9](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/9.png)
+
 > 헤더 스타일 변경
 
-### 헤더의 좌측, 타이틀, 우측 영역에 다른 컴포넌트 보여주기 
+### 헤더의 좌측, 타이틀, 우측 영역에 다른 컴포넌트 보여주기
 
 > App.js
 
@@ -612,11 +611,11 @@ function App() {
     return (
         <NavigationContainer>
             <Stack.Navigator initialRouteName="Home">
-                <Stack.Screen 
+                <Stack.Screen
                     name="Home"
                     ...
                 />
-                <Stack.Screen 
+                <Stack.Screen
                     name="Detail"
                     component={DetailScreen}
                     options={{
@@ -633,7 +632,7 @@ function App() {
                         headerRight: () => (
                             <View>
                                 <Text>Right</Text>
-                            </View> 
+                            </View>
                         ),
                     }}
                 />
@@ -649,6 +648,7 @@ export default App;
 - 여기서 headerTitle에 넣은 컴포넌트를 보면 children이라는 Props를 받아오고 있는데, 현재 이 값은 화면의 타이틀을 가리킵니다
 
 ![image10](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/10.png)
+
 > 헤더의 좌측, 타이틀, 우측 영역에 다른 컴포넌트 보여주기
 
 - iOS와 안드로이드의 화면이 다릅니다. 안드로이드에선 좌측에 화살표 아이콘이 나타나고 있습니다. 만약 이 버튼을 없애고 싶다면, headerBackVisible 옵션을 false로 지정하면 됩니다.
@@ -669,6 +669,7 @@ export default App;
 ```
 
 ![image11](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/11.png)
+
 > 안드로이드에서 화살표 아이콘 없애기
 
 ### 헤더 숨기기
@@ -678,16 +679,16 @@ export default App;
 > screens/HeaderlessScreen.js
 
 ```jsx
-import React from 'react';
-import {View, Text, Button} from 'react-native';
+import React from "react";
+import { View, Text, Button } from "react-native";
 
-function HeaderlessScreen({navigation}) {
-    return (
-        <View>
-            <Text>Header가 없네?</Text>
-            <Button onPress={() => navigation.pop()} title="뒤로가기" />
-        </View>
-    );
+function HeaderlessScreen({ navigation }) {
+  return (
+    <View>
+      <Text>Header가 없네?</Text>
+      <Button onPress={() => navigation.pop()} title="뒤로가기" />
+    </View>
+  );
 }
 
 export default HeaderlessScreen;
@@ -697,33 +698,33 @@ export default HeaderlessScreen;
 - 그다음에는 App에서 화면 설정해주세요.
 
 > App.js
- 
+
 ```jsx
-import React from 'react';
-import {NavigationContainer} from '@react-navigation/native';
-import {createNativeStackNavigation} from '@react-navigation/native-stack';
-import HomeScreen from './screens/HomeScreen';
-import DetailScreen from './screens/DetailScreen';
-import {View, Text, TouchableOpacity} from 'react-native';
-import HeaderlessScreen from './screens/HeaderlessScreen';
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigation } from "@react-navigation/native-stack";
+import HomeScreen from "./screens/HomeScreen";
+import DetailScreen from "./screens/DetailScreen";
+import { View, Text, TouchableOpacity } from "react-native";
+import HeaderlessScreen from "./screens/HeaderlessScreen";
 
 const Stack = createNativeStackNavigator();
 
 function App() {
-    return (
-        <NavigationContainer>
-            <Stack.Navigator initialRouteName="Home">
-                ...
-                <Stack.Screen
-                    name="Headerless"
-                    component={HeaderlessScreen}
-                    options={{
-                        headerShown: false,
-                    }}
-                />
-            </Stack.Navigator>
-        </NavigationContainer>
-    );
+  return (
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Home">
+        ...
+        <Stack.Screen
+          name="Headerless"
+          component={HeaderlessScreen}
+          options={{
+            headerShown: false,
+          }}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 }
 
 export default App;
@@ -741,7 +742,7 @@ function HomeScreen({navigation}) {
     useEffect(() => {
         navigation.setOptions({title: '홈'});
     }, [navigation);
-    
+
     return (
         <View>
             ...
@@ -757,6 +758,7 @@ export default HomeScreen;
 ```
 
 ![image12](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/12.png)
+
 > 헤더가 없는 화면
 
 - 안드로이드에서는 문제없이 잘 나타나는데 iOS에서는 StatusBar 영역을 침범해서 화면이 나타나고 있습니다.
@@ -767,26 +769,27 @@ export default HomeScreen;
 > screens/HeaderlessScreen.js
 
 ```jsx
-import React from 'react';
-import {View, Text, Button} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import React from "react";
+import { View, Text, Button } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-function HeaderlessScreen({navigation}){
-    return (
-        <SafeAreaView>
-            <View>
-                <Text>Header가 없네?</Text>
-                <Button onPress={() => navigation.pop()} title="뒤로가기" />
-            </View>
-        </SafeAreaView>
-    );
+function HeaderlessScreen({ navigation }) {
+  return (
+    <SafeAreaView>
+      <View>
+        <Text>Header가 없네?</Text>
+        <Button onPress={() => navigation.pop()} title="뒤로가기" />
+      </View>
+    </SafeAreaView>
+  );
 }
 
 export default HeaderlessScreen;
 ```
 
 ![image13](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/13.png)
-> SafeAreaView 적용 
+
+> SafeAreaView 적용
 
 - 만약 헤더와 관련한 설정을 특정 화면에만 적용하지 않고, 네이티브 스택 내비게이터에서 관리하는 모든 화면에 넣고 싶다면 Stack.Navigator에 screenOptions라는 Props를 설정하면 됩니다.
 - 이 Props에 넣는 값은 Stack.Screen의 options와 같습니다. 즉, 모든 화면에서 헤더를 없애고 싶다면 다음과 같이 하면 됩니다.
@@ -794,7 +797,7 @@ export default HeaderlessScreen;
 > App.js - Stack.Navigator
 
 ```jsx
-<Stack.Navigator 
+<Stack.Navigator
     initialRouteName="Home"
     screenOptions={{
         headerShown: false,
@@ -806,7 +809,6 @@ export default HeaderlessScreen;
 - 헤더를 커스터마이징할 수 있는 설정은 지금까지 설정해본 것 외에도 많습니다. 더 자세한 내용은 공식 문서를 참고
 - https://reactnavigation.org/docs/native-stack-navigator#options
 
-
 ---
 
 # 다양한 내비게이터
@@ -817,6 +819,7 @@ export default HeaderlessScreen;
 - 사이드바를 모바일 앱에서는 드로어(Drawer)라고 부릅니다.
 
 ![image14](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/14.png)
+
 > 드로어 내비게이터
 
 - 내비게이터를 사용하려면 먼저 다음과 같이 라이브러리를 설치하세요.
@@ -835,48 +838,48 @@ pod install
 > App.js
 
 ```jsx
-import React from 'react';
-import {NavigationContainer} from '@react-navigation/native';
-import {createDrawerNavigator} from '@react-navigation/drawer';
-import {View, Text, Button} from 'react-native';
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createDrawerNavigator } from "@react-navigation/drawer";
+import { View, Text, Button } from "react-native";
 
 const Drawer = createDrawerNavigator();
 
-function HomeScreen({navigation}) {
-    return (
-        <View>
-            <Text>Home</Text>
-            <Button title="Drawer 열기" onPress={() => navigation.openDrawer()} />
-            <Button 
-                title="Setting 열기"
-                onPress={() => navigation.navigate('Setting')}
-            />
-        </View>
-    );
+function HomeScreen({ navigation }) {
+  return (
+    <View>
+      <Text>Home</Text>
+      <Button title="Drawer 열기" onPress={() => navigation.openDrawer()} />
+      <Button
+        title="Setting 열기"
+        onPress={() => navigation.navigate("Setting")}
+      />
+    </View>
+  );
 }
 
-function SettingScreen({navigation}) {
-    return (
-        <View>
-            <Text>Setting</Text>
-            <Button title="뒤로가기" onPress={() => navigation.goBack()} />
-        </View>
-    );
+function SettingScreen({ navigation }) {
+  return (
+    <View>
+      <Text>Setting</Text>
+      <Button title="뒤로가기" onPress={() => navigation.goBack()} />
+    </View>
+  );
 }
 
 function App() {
-    return (
-        <NavigationContainer>
-            <Drawer.Navigator
-                initialRouteName="Home"
-                drawerPosition="left"
-                backBehavior="history"
-            >
-                <Drawer.Screen name="Home" component={HomeScreen} />
-                <Drawer.Screen name="Setting" component={SettingScreen} />
-            </Drawer.Navigator>
-        </NavigationContainer>
-    );
+  return (
+    <NavigationContainer>
+      <Drawer.Navigator
+        initialRouteName="Home"
+        drawerPosition="left"
+        backBehavior="history"
+      >
+        <Drawer.Screen name="Home" component={HomeScreen} />
+        <Drawer.Screen name="Setting" component={SettingScreen} />
+      </Drawer.Navigator>
+    </NavigationContainer>
+  );
 }
 
 export default App;
@@ -884,15 +887,14 @@ export default App;
 
 > 이와 같이 편의상 파일 하나에 여러 개의 컴포넌트를 선언해도 상관없습니다. 다만 한 파일에 너무 많은 컴포넌트를 선언하면 나중에 유지보수하는 과정에서 컴포넌트 찾기가 번거로울 수도 있습니다. 서로 관련된 컴포넌트이거나, 지금처럼 연습하는 상황이 아니라면 이렇게 파일 하나에 여러 컴포넌트를 선언하지 않는 것을 권장합니다.
 
-
 - 이전에 네이티브 스택 내비게이터를 사용했을 때와 사용법이 꽤 비슷합니다. createDrawerNavigator 함수를 만들어 Drawer 객체를 만듭니다. 이 안에는 Navigator와 Screen이 들어있는데 이를 컴포넌트로 사용하면 됩니다.
 - Drawer.Navigator에는 initialRouteName Props를 설정했는데요. 내비게이터에서 기본적으로 보여줄 화면의 이름입니다. 만약 이 값이 없다면 맨 위에 있는 화면(Home)이 뜹니다.
 - drawerPosition Props는 드로어가 나타나는 위치를 정합니다. 값을 "left" 또는 "right"로 지정할 수 있습니다. 따로 값을 지정하지 않으면 기본값은 "left"로 설정됩니다.
 - backBehavior Props는 뒤로가기를 할 때 어떻게 작동할지 설정합니다. 이 Props에 지정할 수 있는 값은 다음과 같습니
-    - initialRoute: 가장 첫 번째 화면을 보여줍니다.
-    - order: Drawer.Screen 컴포넌트를 사용한 순서에 따라 현재 화면의 이전 화면을 보여줍니다.
-    - history: 현재 화면을 열기 직전에 봤던 화면을 보여줍니다.
-    - none: 뒤로가기를 수행하지 않습니다.
+  - initialRoute: 가장 첫 번째 화면을 보여줍니다.
+  - order: Drawer.Screen 컴포넌트를 사용한 순서에 따라 현재 화면의 이전 화면을 보여줍니다.
+  - history: 현재 화면을 열기 직전에 봤던 화면을 보여줍니다.
+  - none: 뒤로가기를 수행하지 않습니다.
 - 기본적으로 화면의 좌측(drawerPosition을 "right"로 했다면 우측) 끝에서 중앙으로 스와이프하면 드로어가 나타납니다. 만약 원하는 상황에 직접 드로어를 보여주고 싶다면 navigation을 화면으로 사용된 컴포넌트의 Props로 받아와서 navigation.openDrawer 함수를 호출해주면 됩니다.
 - 사용자 행동(예를 들어, 버튼 클릭)에 따라 다른 화면으로 이동하고 싶을 때는 navigation.navigate 함수를 사용하고, 뒤로가기를 하고 싶을 때는 navigation.goBack 함수를 호출하면 됩니다.
 
@@ -903,7 +905,7 @@ export default App;
 > App.js
 
 ```jsx
-... 
+...
 
 function App() {
     return (
@@ -913,7 +915,7 @@ function App() {
                 drawerPosition="left"
                 backBehavior="history"
             >
-                <Drawer.Screen 
+                <Drawer.Screen
                     name="Home"
                     component={HomeScreen}
                     options={{title: '홈'}}
@@ -932,12 +934,224 @@ export default App;
 ```
 
 ![image15](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/15.png)
+
 > 드로어의 화면 이름 변경
 
+- 드로어의 스타일을 변경하고자 할 때는 다음과 같이 Drawer.Navigator 컴포넌트에 screenOptions Props를 설정하면 됩니다. 이 Props는 화면을 설정할 수 있는데 드로어에 관한 옵션은 drawer로 시작합니다. 다음 값들이 들어있는 객체를 설정하면 됩니다.
+  - drawerActiveTintColor: 활성화된 항목의 텍스트 색상
+  - drawerActiveBackgroundColor: 활성화된 항목의 배경색
+  - drawerInactiveTintColor: 비활성화된 항목의 텍스트 색상
+  - drawerInactiveBackgroundColor: 비활성화된 항목의 배경색
+  - drawerItemStyle: 항목의 스타일
+  - drawerLabelStyle: 항목 내부의 텍스트 스타일
+  - drawerContentContainerStyle: 항목들을 감싸고 있는 영역의 스타일
+  - drawerStyle: 전체 드로어를 감싸고 있는 영역의 스타일
+- 이 Props를 사용해 활성화된 항목의 배경색을 주황색으로 바꿔보겠습니다.
 
+> App.js
+
+```jsx
+...
+
+function App() {
+  return (
+    <NavigationContainer>
+      <Drawer.Navigator
+        initialRouteName="Home"
+        drawerPosition="left"
+        backBehavior="history"
+        screenOptions={{
+          drawerActiveBackgroundColor: '#fb8c00',
+          drawerActiveTintColor: 'white',
+        }}>
+        <Drawer.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{title: '홈'}}
+        />
+        <Drawer.Screen
+          name="Setting"
+          component={SettingScreen}
+          options={{title: '설정'}}
+        />
+      </Drawer.Navigator>
+    </NavigationContainer>
+  );
+}
+
+export default App;
+```
+
+![image16](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/16.png)
+
+> 드로어의 스타일 변경
+
+- 만약 Drawer 컴포넌트가 나타나는 영역에 아예 다른 UI를 보여주고 싶다면 drawerContent Props에 함수 컴포넌트를 넣어주면 됩니다.
+
+> App.js
+
+> App.js
+
+```jsx
+...
+import {SafeAreaView} from 'react-native-safe-area-context';
+
+...
+
+function App() {
+  return (
+    <NavigationContainer>
+      <Drawer.Navigator
+        initialRouteName="Home"
+        drawerPosition="left"
+        backBehavior="history"
+        drawerContent={({navigation}) => (
+          <SafeAreaView>
+            <Text>A Custom Drawer</Text>
+            <Button
+              onPress={() => navigation.closeDrawer()}
+              title="Drawer 닫기"
+            />
+          </SafeAreaView>
+        )}>
+        <Drawer.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{title: '홈'}}
+        />
+        <Drawer.Screen
+          name="Setting"
+          component={SettingScreen}
+          options={{title: '설정'}}
+        />
+      </Drawer.Navigator>
+    </NavigationContainer>
+  );
+}
+
+export default App;
+```
+
+- iOS도 지원하는 앱이라면 drawerContent를 지정할 때 SafeAreaView를 꼭 사용해주세요. 그렇지 않으면 드로어의 상단부 영역이 StatusBar 영역과 겹치게 됩니다.
+- drawerContent에 넣는 함수 컴포넌트에서도 navigation을 사용할 수 있습니다. navigation.closeDrawer 함수는 현재 보여지는 드로어를 닫아줍니다.
+
+![image17](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/17.png)
+
+> drawerContent 설정
+
+- 드로어 내비게이터를 사용하면 네이티브 스택 내비게이터와 비슷하게 화면 상단에 헤더가 나타납니다.
+- 만약 헤더 좌측에 보여지는 햄버거 버튼을 바꾸고 싶다면 Drawer.Screen의 options에서 headerLeft에 컴포넌트를 설정하면 됩니다.
+
+> App.js - 첫 번째 Drawer.Screen
+
+```jsx
+<Drawer.Screen
+  name="Home"
+  component={HomeScreen}
+  options={{ title: "홈", headerLeft: () => <Text>Left</Text> }}
+/>
+```
+
+- 만약 모든 화면에 공통으로 헤더의 커스터마이징을 적용하려면 Drawer.Navigator의 screenOptions Props에 헤더와 관련해 설정하면 됩니다. 다음과 같이 설정하면 모든 화면에서 헤더가 사라집니다.
+
+> App.js - Drawer.Navigator
+
+```jsx
+<Drawer.Navigator
+  initialRouteName="Home"
+  drawerPosition="left"
+  backBehavior="history"
+  screenOptions={{
+    headerShown: false,
+    ...
+  }}
+  ...
+>
+```
+
+- 드로어 내비게이터에는 지금까지 설명한 것 외에도 더 많은 기능이 있습니다. 자세한 내용은 공식 문서를 확인
+- https://reactnavigation.org/docs/drawer-navigator
+
+## 하단 탭 내비게이터
+
+![image18](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/18.png)
+
+> 하단 탭 내비게이터
+
+- 하단 탭 내비게이터도 마찬가지로 라이브러리를 추가로 설치해야 합니다.
+- 하단 탭을 구현하는 과정에서 아이콘도 필요하므로, 아이콘을 편리하게 사용할 수 있도록 react-native-vector-icons 라이브러리도 설치
+
+```
+yarn add @react-navigation/bottom-tabs react-native-vector-icons
+cd ios
+pod install
+```
+
+- 우선 아이콘 없이 설정해보겠습니다. App.js 파일에서 기존에 만든 코드를 지우고 다음과 같이 작성해보세요.
+
+> App.js
+
+```jsx
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Text } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+const Tab = createBottomTabNavigator();
+
+function HomeScreen() {
+  return <Text>Home</Text>;
+}
+
+function SearchScreen() {
+  return <Text>Search</Text>;
+}
+
+function NotificationScreen() {
+  return <Text>Notification</Text>;
+}
+
+function MessageScreen() {
+  return <Text>Message</Text>;
+}
+
+function App() {
+  return (
+    <NavigationContainer>
+      <Tab.Navigator initialRouteName="Home">
+        <Tab.Screen name="Home" component={HomeScreen} />
+        <Tab.Screen name="Search" component={SearchScreen} />
+        <Tab.Screen name="Notification" component={NotificationScreen} />
+        <Tab.Screen name="Message" component={MessageScreen} />
+      </Tab.Navigator>
+    </NavigationContainer>
+  );
+}
+
+export default App;
+```
+
+![image19](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/19.png)
+
+> 아이콘이 없는 하단 탭
 
 ---
 
 # 내비게이션 Hooks
 
+```
 
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
