@@ -1136,6 +1136,110 @@ export default App;
 
 > 아이콘이 없는 하단 탭
 
+- 현재 아이콘을 따로 설정하지 않았기 때문에 ? 또는 X가 나타납니다.
+- 하단 탭 내비게이터는 앞에서 다룬 네이티브 스택 내비게이터, 드로어 내비게이터와 마찬가지로 상단에 헤더가 나타납니다.
+- 헤더는 Tab.Navigator에 screenOptions를 설정하거나 각 Tab.Screen에 options를 설정하여 커스터마이징할 수 있습니다.
+
+- 아이콘을 사용하기 위해 iOS와 안드로이드에 필요한 설정을 해주겠습니다.
+- Info.plist를 열어 최하단에 UIAppFonts를 추가
+
+> ios/LearnReactNavigation/Info.plist - 최하단
+
+```xml
+...
+
+  <key>UIViewControllerBasedStatusBarAppearance</key>
+    <false/>
+    <key>UIAppFonts</key>
+    <array>
+        <string>MaterialIcons.ttf</string>
+    </array>
+</dict>
+</plist>
+```
+
+- build.gradle 파일을 열어 최하단에 다음 코드를 추가
+
+> android/app/build.gradle - 최하단
+
+```groovy
+project.ext.vectoricons = [
+  iconFontNames: [ 'MaterialIcons.ttf' ]
+]
+
+apply from "../../node_modules/react-native-vector-icons/font.gradle"
+```
+
+- 설정을 마치고 yarn ios와 yarn android 명령어를 실행해 앱을 다시 가동해주세요.
+- 이제 각 화면에 아이콘을 설정해주겠습니다. 아이콘은 Screen 컴포넌트에 options Props를 통해 설정할 수 있습니다. 이 과정에서 화면의 타이틀도 변경해주겠습니다. title 값을 지정해주면 아이콘과 함께 나타나는 텍스트도 변경됩니다.
+
+> App.js
+
+```jsx
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Text } from "react-native";
+import Icon from "react-native-vector-icons/MaterialIcons";
+
+...
+
+function App() {
+  return (
+    <NavigationContainer>
+      <Tab.Navigator initialRouteName="Home">
+        <Tab.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{
+            title: '홈',
+            tabBarIcon: ({color, size}) => (
+              <Icon name="home" color={color} size={size} />
+            ),
+          }}
+        />
+
+        <Tab.Screen
+          name="Search"
+          component={SearchScreen}
+          options={{
+            title: '검색',
+            tabBarIcon: ({color, size}) => (
+              <Icon name="search" color={color} size={size} />
+            ),
+          }}
+        />
+
+        <Tab.Screen
+          name="Notification"
+          component={NotificationScreen}
+          options={{
+            title: '알림',
+            tabBarIcon: ({color, size}) => (
+              <Icon name="notifications" color={color} size={size} />
+            )
+          }}
+        />
+
+        <Tab.Screen
+          name="Message"
+          component={MessageScreen}
+          options={{
+            title: '메시지',
+            tabBarIcon: ({color, size}) => (
+              <Icon name="message" color={color} size={size} />
+            ),
+
+          }}
+        />
+      </Tab.Navigator>
+    </NavigationContainer>
+  );
+}
+
+export default App;
+```
+
 ---
 
 # 내비게이션 Hooks
