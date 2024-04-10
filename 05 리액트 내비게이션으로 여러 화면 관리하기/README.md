@@ -835,8 +835,106 @@ pod install
 > App.js
 
 ```jsx
+import React from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import {createDrawerNavigator} from '@react-navigation/drawer';
+import {View, Text, Button} from 'react-native';
 
+const Drawer = createDrawerNavigator();
+
+function HomeScreen({navigation}) {
+    return (
+        <View>
+            <Text>Home</Text>
+            <Button title="Drawer 열기" onPress={() => navigation.openDrawer()} />
+            <Button 
+                title="Setting 열기"
+                onPress={() => navigation.navigate('Setting')}
+            />
+        </View>
+    );
+}
+
+function SettingScreen({navigation}) {
+    return (
+        <View>
+            <Text>Setting</Text>
+            <Button title="뒤로가기" onPress={() => navigation.goBack()} />
+        </View>
+    );
+}
+
+function App() {
+    return (
+        <NavigationContainer>
+            <Drawer.Navigator
+                initialRouteName="Home"
+                drawerPosition="left"
+                backBehavior="history"
+            >
+                <Drawer.Screen name="Home" component={HomeScreen} />
+                <Drawer.Screen name="Setting" component={SettingScreen} />
+            </Drawer.Navigator>
+        </NavigationContainer>
+    );
+}
+
+export default App;
 ```
+
+> 이와 같이 편의상 파일 하나에 여러 개의 컴포넌트를 선언해도 상관없습니다. 다만 한 파일에 너무 많은 컴포넌트를 선언하면 나중에 유지보수하는 과정에서 컴포넌트 찾기가 번거로울 수도 있습니다. 서로 관련된 컴포넌트이거나, 지금처럼 연습하는 상황이 아니라면 이렇게 파일 하나에 여러 컴포넌트를 선언하지 않는 것을 권장합니다.
+
+
+- 이전에 네이티브 스택 내비게이터를 사용했을 때와 사용법이 꽤 비슷합니다. createDrawerNavigator 함수를 만들어 Drawer 객체를 만듭니다. 이 안에는 Navigator와 Screen이 들어있는데 이를 컴포넌트로 사용하면 됩니다.
+- Drawer.Navigator에는 initialRouteName Props를 설정했는데요. 내비게이터에서 기본적으로 보여줄 화면의 이름입니다. 만약 이 값이 없다면 맨 위에 있는 화면(Home)이 뜹니다.
+- drawerPosition Props는 드로어가 나타나는 위치를 정합니다. 값을 "left" 또는 "right"로 지정할 수 있습니다. 따로 값을 지정하지 않으면 기본값은 "left"로 설정됩니다.
+- backBehavior Props는 뒤로가기를 할 때 어떻게 작동할지 설정합니다. 이 Props에 지정할 수 있는 값은 다음과 같습니
+    - initialRoute: 가장 첫 번째 화면을 보여줍니다.
+    - order: Drawer.Screen 컴포넌트를 사용한 순서에 따라 현재 화면의 이전 화면을 보여줍니다.
+    - history: 현재 화면을 열기 직전에 봤던 화면을 보여줍니다.
+    - none: 뒤로가기를 수행하지 않습니다.
+- 기본적으로 화면의 좌측(drawerPosition을 "right"로 했다면 우측) 끝에서 중앙으로 스와이프하면 드로어가 나타납니다. 만약 원하는 상황에 직접 드로어를 보여주고 싶다면 navigation을 화면으로 사용된 컴포넌트의 Props로 받아와서 navigation.openDrawer 함수를 호출해주면 됩니다.
+- 사용자 행동(예를 들어, 버튼 클릭)에 따라 다른 화면으로 이동하고 싶을 때는 navigation.navigate 함수를 사용하고, 뒤로가기를 하고 싶을 때는 navigation.goBack 함수를 호출하면 됩니다.
+
+### 드로어 커스터마이징하기
+
+- 우선 드로어에 나오는 화면 이름은 네이티브 스택 내비게이터를 사용했을 때처럼 Screen 컴포넌트에 options Props를 통해 title 값을 지정하면 됩니다.
+
+> App.js
+
+```jsx
+... 
+
+function App() {
+    return (
+        <NavigationContainer>
+            <Drawer.Navigator
+                initialRouteName="Home"
+                drawerPosition="left"
+                backBehavior="history"
+            >
+                <Drawer.Screen 
+                    name="Home"
+                    component={HomeScreen}
+                    options={{title: '홈'}}
+                />
+                <Drawer.Screen
+                    name="Setting"
+                    component={SettingScreen}
+                    options={{title: '설정'}}
+                />
+            </Drawer.Navigator>
+        </NavigationContainer>
+    );
+}
+
+export default App;
+```
+
+![image15](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/15.png)
+> 드로어의 화면 이름 변경
+
+
 
 ---
 
