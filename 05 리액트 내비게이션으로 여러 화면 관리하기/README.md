@@ -1240,6 +1240,183 @@ function App() {
 export default App;
 ```
 
+- tabBarIcon에는 함수 컴포넌트를 넣었으며, 이 컴포넌트는 focused, color, size를 Props로 받아옵니다.
+- 현재는 focused를 사용하지 않기 때문에 생략했고, color와 size의 경우 Icon 컴포넌트로 그대로 전달해줬습니다.
+- 이를 통해 특정 화면을 열었을 때 그 화면의 아이콘 색상이 변경되고, 화면의 가로/세로 모드에 따라 아이콘 크기도 변경됩니다.
+
+![image20](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/20.png)
+
+> 하단 탭 아이콘 적용
+
+### 하단 탭 커스터마이징
+
+- Tab.Navigator의 screenOptions Props를 통해 하단 탭에 대한 설정도 커스터마이징할 수 있습니다. 탭에 관한 설정은 tabBar로 시작합니다.
+  - tabBarActiveTintColor: 활성화된 항목의 아이콘과 텍스트 색상
+  - tabBarActiveBackgroundColor: 활성화된 항목의 배경색
+  - tabBarInActiveTintColor: 비활성화된 항목의 아이콘과 텍스트 색상
+  - tabBarInActiveBackgroundColor: 비활성화된 항목의 배경색
+  - tabBarShowLabel: 항목에서 텍스트의 가시성 설정(기본값: true)
+  - tabBarShowIcon: 항목에서 아이콘의 가시성 설정(기본값: false)
+  - tabBarStyle: 하단 탭 스타일
+  - tabBarLabelStyle: 텍스트 스타일
+  - tabBarItemStyle: 항목 스타일
+  - tabBarLabelPosition: 텍스트 위치 'beside-icon'(아이콘 우측) / 'below-icon'(아이콘 하단)
+  - tabBarAllowFontScaling: 시스템 폰트 크기에 따라 폰트 크기를 키울지 결정(기본값: true)
+  - tabBarSafeAreaInset: SafeAreaView의 forceInset 덮어쓰는 객체(기본값: {bottom: 'always', top: 'never'})
+  - tabBarKeyboardHidesTabBar: 키보드가 나타날 때 하단 탭을 가릴지 결정(기본값: false)
+- 설정을 통해 하단 탭에서 텍스트는 숨기고, 활성화된 항목의 아이콘 색상을 주황색(#fb8c00)으로 설정해보세요.
+
+> App.js
+
+```jsx
+...
+
+function App() {
+  return (
+    <NavigationContainer>
+      <Tab.Navigator
+        initialRouteName="Home"
+        tabBarOptions={{
+          activeTintColor: '#fb8c00',
+          showLabel: false
+        }}>
+
+    ...
+
+  );
+}
+```
+
+![image21](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/21.png)
+
+> 하단 탭 커스터마이징
+
+- 하단 탭 내비게이터의 더 많은 기능은 공식 문서에서 확인할 수 있습니다.
+- https://reactnavigation.org/docs/bottom-tab-navigator
+
+### 네이티브 스택 내비게이터와 하단 탭 내비게이터를 함께 사용하기
+
+- 상황에 따라 여러 개의 내비게이터를 함께 사용할 수 있습니다. 현재 프로젝트의 화면 구성을 다음과 같이 설정해보겠습니다.
+
+- Stack.Navigator
+
+  - Main (Tab.Navigator)
+    - Home
+    - Search
+    - Notification
+    - Message
+  - Detail
+
+- screens 디렉터리에 MainScreen 컴포넌트를 다음과 같이 생성하세요.
+
+> screens/MainScreen.js
+
+```jsx
+import React from "react";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Text, View, Button } from "react-native";
+import Icon from "react-native-vector-icons/MaterialIcons";
+
+const Tab = createBottomTabNavigator();
+
+function HomeScreen({ navigation }) {
+  return (
+    <View>
+      <Text>Home</Text>
+      <Button
+        title="Detail 1 열기"
+        onPress={() =>
+          navigation.push("Detail", {
+            id: 1,
+          })
+        }
+      />
+    </View>
+  );
+}
+
+function SearchScreen() {
+  return (
+    <View>
+      <Text>Search</Text>
+    </View>
+  );
+}
+
+function NotificationScreen() {
+  return (
+    <View>
+      <Text>Notification</Text>
+    </View>
+  );
+}
+
+function MessageScreen() {
+  return (
+    <View>
+      <Text>Message</Text>
+    </View>
+  );
+}
+
+function MainScreen() {
+  return (
+    <Tab.Navigator
+      initialRouteName="Home"
+      screenOptions={{
+        tabBarActiveTintColor: "#fb8c00",
+        tabBarShowLabel: false,
+      }}
+    >
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{
+          title: "홈",
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="home" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Search"
+        component={SearchScreen}
+        options={{
+          title: "검색",
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="search" color={color} size={size} />
+          ),
+        }}
+      />
+
+      <Tab.Screen
+        name="Notification"
+        component={NotificationScreen}
+        options={{
+          title: "알림",
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="notification" color={color} size={size} />
+          ),
+        }}
+      />
+
+      <Tab.Screen
+        name="Message"
+        component={MessageScreen}
+        options={{
+          title: "메시지",
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="message" color={color} size={size} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+export default MainScreen;
+```
+
 ---
 
 # 내비게이션 Hooks
