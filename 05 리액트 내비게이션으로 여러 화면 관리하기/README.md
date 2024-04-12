@@ -1417,6 +1417,131 @@ function MainScreen() {
 export default MainScreen;
 ```
 
+- 다음으로 App.js 파일에서 네이티브 스택 내비게이터를 설정한 뒤에 MainScreen과 DetailScreen 컴포넌트를 추가해주겠습니다.
+
+> App.js
+
+```jsx
+import React from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import MainScreen from './screens/MainScreen';
+import DetailScreen from './screens/DetailScreen';
+
+const Stack = createNativeStackNavigator();
+
+function App() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen 
+          name="Main"
+          component={MainScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen name="Detail" component={DetailScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+
+export default App;
+```
+- 여기까지 코드를 입력하면 하단 탭과 네이티브 스택을 같이 사용하는 예시가 완성됩니다.
+- HomeScreen에서 Detail 1 열기 버튼을 눌러보세요. DetailScreen이 탭 내비게이터를 가리고 새로 보여집니다.
+- 네이티브 스택 내비게이터에서 MainScreen의 화면을 설정할 때, options에 headerShown 값을 false로 해주었는데요. 만약 이 값을 설정하지 않는다면 두 개의 헤더가 나타나는 문제가 발생하므로, 하단 탭 내비게이터를 네이티브 스택 내비게이터 내부에서 사용하게 될 때 이 설정을 해주는 것이 중요합니다.
+
+## 머티리얼 상단 탭 내비게이터
+
+- 머티리얼 상단 탭 내비게이터(Material Top Tab Navigator)는 앞에서 배운 하단 탭 내비게이터와 유사합니다.
+- 이 내비게이터는 탭을 상단에 위치시킬 수 있습니다. 그리고 탭을 누르면 구글의 머티리얼 디자인 특유의 물결(ripple) 효과가 나타납니다. 화면을 스와이프하는 형태로 우측/좌측 탭으로 전환할 수도 있습니다.
+- 내비게이터를 사용하기 위해 다음 라이브러리들을 설치해주세요.
+
+```
+yarn add @react-navigation/material-top-tabs react-native-tab-view react-native-pager-view
+```
+
+- react-native-tab-view는 리액트 네이티브에서 탭을 구현할 수 있게 하는 라이브러리입니다. react-navigation에 종속되지 않는 라이브러리이기 때문에 다른 내비게이션 관련 라이브러리와 함께 사용할 수도 있습니다.
+- 설치 후에는 기존에 사용한 하단 탭 내비게이터를 대체해보겠습니다.
+
+> screens/MainScreen.js
+
+```jsx
+import React from 'react';
+import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
+import {Text, Button, View} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+const Tab = createMaterialTopTabNavigator();
+
+...
+
+function MainScreen() {
+  return (
+    <Tab.Navigator
+      initialRouteName="Home"
+      screenOptions={{
+        tabBarShowLabel: false,
+      }}>
+      <Tab.Screen 
+        name="Home"
+        component={HomeScreen}
+        options={{
+          tabBarIcon: ({color}) => <Icon name="home" color={color} size={24} />,
+        }}
+      />
+      
+      <Tab.Screen 
+        name="Search"
+        component={SearchScreen}
+        options={{
+          tabBarIcon: ({color}) => (
+            <Icon name="search" color={color} size={24} />
+          ),
+        }}
+      />
+      
+      <Tab.Screen 
+        name="Notification"
+        component={NotificationScreen}
+        options={{
+          tabBarIcon: ({color}) => (
+            <Icon name="notifications" color={color} size={24} />
+          ),
+        }}
+      />
+      
+      <Tab.Screen 
+        name="Message" 
+        component={MessageScreen}
+        options={{
+          tabBarIcon: ({color}) => (
+            <Icon name="message" color={color} size={24} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+export default MainScreen;
+```
+
+- 코드를 저장한 뒤, yarn ios와 yarn android 명령어를 다시 입력하여 시뮬레이터를 재시작하세요.
+- 머티리얼 상단 탭 내비게이터의 경우 아이콘 크기를 자체적으로 지정해주지 않으므로 아이콘의 size Props를 직접 지정해야 합니다. 그리고 기존에 다룬 내비게이터와 다르게 이 내비게이터는 헤더를 보여주지 않습니다. App 컴포넌트에서 MainScreen의 화면 설정할 때 options를 제거하여 헤더를 활성화해보세요.
+
+> App.js - Main 화면 설정
+
+```jsx
+<Stack.Screen name="Main" component={MainScreen} />
+```
+
+![image22](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/22.png)
+> 머티리얼 상단 탭 내비게이터
+
+- 참고로 머티리얼 물결 효과는 안드로이드 5.0 이상에서만 나타납니다. iOS에서는 이 효과가 없습니다.
+- MaterialTopTabNavigator에 설정할 수 있는 옵션들을 알아봅시다. Tab.Navigator 컴포넌트에는 다음과 같은 Props를 지정해줄 수 있습니다.
+
 ---
 
 # 내비게이션 Hooks
