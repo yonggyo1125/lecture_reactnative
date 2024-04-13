@@ -1541,23 +1541,99 @@ export default MainScreen;
 
 - 참고로 머티리얼 물결 효과는 안드로이드 5.0 이상에서만 나타납니다. iOS에서는 이 효과가 없습니다.
 - MaterialTopTabNavigator에 설정할 수 있는 옵션들을 알아봅시다. Tab.Navigator 컴포넌트에는 다음과 같은 Props를 지정해줄 수 있습니다.
+  - initialRouteName: 초기 화면의 이름
+  - screenOptions: 화면의 기본 설정. 하단 탭 내비게이션과 비슷한데, 다음과 같은 추가 옵션이 있습니다.
+    - swipeEnabled: 화면을 좌우로 스와이프하여 전환할 수 있게 합니다(기본값 true).
+    - lazy: 특정 탭으로 이동해야만 해당 탭을 렌더링합니다(기본값: true).
+    - lazyPreloadDistance: lazy 속성이 활성화된 상태에서 몇 칸 뒤 화면을 미리 불러올지 설정합니다(기본값: 0).
+    - lazyPlaceholder: lazy 속성이 활성화되어 있을 때 아직 보이지 않은 화면에서 보여줄 대체 컴포넌트
+    - tabBarIndicator: 활성화된 탭을 표시하는 컴포넌트
+    - tabBarIndicatorStyle: 활성화된 탭을 표시하는 컴포넌트의 스타일
+  - backBehavior: 뒤로가기할 때의 작동 방식
+  - tabBarPosition: 탭 바의 위치(top 또는 bottom)
+  - keyboardDismissMode: 키보드를 숨기는 설정
+    - auto: 기본값. 화면이 바뀔 때 키보드를 숨깁니다.
+    - on-drag: 화면을 드래그할 때 키보드를 숨깁니다.
+    - none: 드래그해도 키보드를 숨기지 않습니다.
+  
+  - sceneContainerStyle: 각 화면에 대한 스타일
+  - style: 전체 탭 뷰에 대한 스타일
+  - tabBar: 탭 바를 대체할 수 있는 컴포넌트(공식 매뉴얼 참조)
+- 자세한 내용은 공식 매뉴얼을 참고하세요.
+- https://reactnavigation.org/docs/material-top-tab-navigator
+- Tab.Screen의 options Props에는 다음과 같은 값들을 설정할 수 있습니다.
+  - tabBarIcon: 아이콘을 보여주는 함수, { focused: boolean, color: string } 타입의 파라미터를 받아옵니다.
+  - tabBarLabel: 탭에서 보이는 이름
+- 활성화된 탭과 인디케이터(Indicator)의 색상도 바꾸고, 탭 버튼이 텍스트와 함께 나타나도록 수정하겠습니다.
+
+> screens/MainScreen.js
+
+```jsx
+...
+
+function MainScreen() {
+  return (
+    <Tab.Navigator
+      initlalRouteName="Home"
+      screenOptions={{
+        tabBarIndicatorStyle: {
+          backgroundColor: '#009688',
+        },
+        tabBarActiveTintColor: '#009688',
+      }}>
+      <Tab.Screen 
+        name="Home"
+        component={HomeScreen}
+        options={{
+          tabBarLabel: '홈',
+          tabBarIcon: ({color}) => <Icon name="home" color={color} size={24} />,
+        }}
+      />
+      <Tab.Screen 
+        name="Search"
+        component={SearchScreen}
+        options={{
+          tabBarLabel: '검색',
+          tabBarIcon: ({color}) => (
+            <Icon name="search" color={color} size={24} />
+          ),
+        }}
+      />
+      <Tab.Screen 
+        name="Notification"
+        component={NotificationScreen}
+        options={{
+          tabBarLabel: '알림',
+          tabBarIcon: ({color}) => (
+             <Icon name="notifications" color={color} size={24} />
+          ),
+        }}
+      />
+      <Tab.Screen 
+        name="Message" 
+        component={MessageScreen}
+        options={{
+          tabBarLabel: '메시지',
+          tabBarIcon: ({color}) => (
+            <Icon name="message" color={color} size={24} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+export default MainScreen;
+```
+
+![image23](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/23.png)
+
+
+## 머티리얼 하단 탭 내비게이터
+
 
 ---
 
 # 내비게이션 Hooks
 
-```
 
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
