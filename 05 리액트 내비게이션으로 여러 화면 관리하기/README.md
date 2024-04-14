@@ -1874,3 +1874,187 @@ function getHeaderTitle(route) {
 ## useNavigation
 
 - useNavigation Hook을 사용하면 Screen으로 사용되고 있지 않은 컴포넌트에서도 navigation 객체를 사용할 수 있습니다. OpenDetailButton 컴포넌트를 다음과 같이 수정해보세요.
+
+> screens/HomeScreen.js
+
+
+```jsx
+import React from 'react';
+import {createMaterialBottomTabNavigator} from '@react-navigation/material-bottom-tabs';
+import {Text, Button, View} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { 
+  useNavigation,
+} from '@react-navigation/native';
+
+... 
+
+function OpenDetailButton() {
+  const navigation = useNavigation();
+  
+  return (
+    <Button 
+      title="Detail 1 열기"
+      onPress={() => navigation.push('Detail", {id: 1})}
+    />
+  );
+}
+
+function HomeScreen() {
+  return (
+    <View>
+      <Text>Home</Text>
+      <OptionDetailButton />
+    </View>
+  );
+}
+
+...
+
+```
+
+- useNavigation을 사용하면 navigation을 상위 컴포넌트에서 Props로 넣어주지 않아도 사용할 수 있답니다.
+
+## useRoute
+
+- Screen이 아닌 컴포넌트에서 route 객체를 사용할 수 있게 합니다. 
+- DetailScreen 컴포넌트에서 route.params.id를 보여주는 Text를 IDText라는 컴포넌트로 따로 분리시키고, 해당 컴포넌트에서 useRoute Hook을 사용해 route 객체를 사용해보세요.
+
+> screens/DetailScreen.js
+
+```jsx
+import React, {useEffect} from 'react';
+import {View, Text, StyleSheet, Button} from 'react-native';
+import {useRoute} from '@react-navigation/native';
+
+function IDText() {
+  const route = useRoute();
+  return <Text style={styles.text}>id: {route.params.id}</Text>l
+}
+
+function DetailScreen({route, navigation}) {
+  useEffect(() => {
+    navigation.setOptions({
+      title: `상세 정보 - ${route.params.id}`,
+    });
+  }, [navigation, route.params.id]);
+  
+  return (
+    <View style={styles.block}>
+      <IDText />
+      <View style={styles.buttons}>
+        <Button 
+          title="다음"
+          onPress={() => navigation.push('Detail', {id: route.params.id + 1})}
+        />
+        <Button title="뒤로가기" onPress={() => navigation.pop()} />
+        <Button title="처음으로" onPress={() => navigation.popToTop()} />
+      </View>
+    </View>
+  );
+}
+
+...
+
+```
+
+## useFocusEffect
+
+- useFocusEffect는 화면에 포커스가 잡혔을 때 특정 작업을 할 수 있게 하는 Hook입니다. 
+- 만약 HomeScreen에서 DetailScreen을 띄운다면 HomeScreen이 화면에서 사라지는 게 아니라, HomeScreen 위에 DetailScreen을 쌓아서 보여주는 것입니다.
+- 그래서 useEffect Hook을 통해서 컴포넌트가 마운트되거나 언마운트될 때 콘솔에 텍스트를 출력한다면 DetailScreen을 띄울 때 컴포넌트가 언마운트되지 않고, 또 뒤로가기하여 HomeScreen으로 돌아왔을 때 컴포넌트가 마운트되지 않는 것을 확인할 수 있습니다.
+- MainScreen.js 파일 안에 있는 HomeScreen 컴포넌트에서 다음과 같이 useEffect를 사용해보세요.
+
+> screens/MainScreen.js
+
+```jsx
+import React, {useEffect} from 'react';
+
+...
+
+function HomeScreen() {
+  useEffect(() => {
+    console.log('mounted');
+    return () => {
+      console.log('unmounted');
+    };
+  }, []);
+  
+  return (
+    <View>
+      <Text>Home</Text>
+      <OptionDetailButton />
+    </View>
+  );
+}
+
+...
+
+```
+
+- 그다음에는 시뮬레이터에서 리로딩해보세요. 그러면 Metro Bundler가 실행 중인 터미널에서 다음과 같이 출력될 것입니다.
+
+```
+LOG    mounted
+```
+
+- 이제 Detail 1 열기 버튼을 눌러보세요. 터미널에 unmounted가 나타나지 않죠? 그리고 뒤로가기를 했을 때 mounted가 또 다시 나타나지 않는 것을 확인해보세요
+- 만약 다른 화면을 열었다가 돌아왔을 때 특정 작업을 하고 싶다면 useFocusEffect Hook을 사용해야 합니다. 또 현재 화면에서 다른 화면으로 넘어갈 때 특정 작업을 하고 싶다면 useFocusEffect에서 함수를 만들어 반환하면 됩니다.
+- useFocusEffect는 꼭 useCallback과 같이 사용해야 합니다. 만약 useCallback을 사용하지 않으면 컴포넌트가 리렌더링될 때마다 useFocusEffect에 등록한 함수가 호출될 것입니다.
+- useCallback은 컴포넌트 내부에서 함수를 만들 때, 새로 만든 함수를 사용하지 않고 이전에 만든 함수를 다시 사용하도록 만들어줍니다. 그리고 그 함수 내부의 로직에서 의존하는 값이 있다면 의존하는 값이 바뀌었을 때 함수를 교체할 수 있도록 해줍니다.
+- HomeScreen을 다음과 같이 수정해보고 Detail 1 열기 버튼을 눌렀다가 뒤로 가보세요.
+
+> screens/MainScreen.js
+
+```jsx
+import React, {useEffect, useCallback} from 'react';
+import {createMaterialBottomTabNavigator} from '@react-navigation/material-bottom-tabs';
+import {Text, Button, View} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import {
+  useNavigation,
+  useFocusEffect,
+} from '@react-navigation/native';
+
+const Tab = createMaterialBottomTabNavigation();
+
+function OpenDetailButton() {
+  const navigation = useNavigation();
+  
+  return (
+    <Button
+      title="Detail 1 열기"
+      onPress={() => navigation.push('Detail", {id: 1})}
+    />
+  );
+}
+
+function HomeScreen() {
+  useFocusEffect(
+     useCallback(() => {
+        console.log('이 화면을 보고 있어요.');
+        return () => {
+          console.log('다른 화면으로 넘어갔어요.');
+        };
+     }, []);
+  );
+  
+  return (
+    <View>
+      <Text>Home</Text>
+      <OpenDetailButton />
+    </View>
+  );
+}
+
+...
+
+```
+
+- 터미널에 다음과 같이 출력됐나요?
+
+```
+LOG    이 화면을 보고 있어요.
+LOG    다른 화면으로 넘어갔어요.
+LOG    이 화면을 보고 있어요.
+```
