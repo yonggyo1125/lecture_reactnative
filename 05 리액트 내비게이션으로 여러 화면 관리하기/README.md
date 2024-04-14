@@ -1628,12 +1628,249 @@ export default MainScreen;
 
 ![image23](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/23.png)
 
-
 ## 머티리얼 하단 탭 내비게이터
 
+- 머티리얼 하단 탭 내비게이터(Material Bottom Tab Navigator)는 방금 다룬 머티리얼 상단 탭 내비게이터와 비슷한 내비게이터인데, 큰 차이점이 있습니다.
+- 이 내비게이터는 하단에만 나타나며, 활성화된 탭에 따라 전체 탭의 배경색을 변경할 수 있습니다. 이때 멋진 물결 효과와 함께 배경색을 전환시킬 수 있습니다. 추가로 탭이 활성화될 때 아이콘이 상단으로 조금 움직입니다.
+- 내비게이터를 사용하기 위해 우선 필요한 라이브러리를 설치해주세요.
+
+```
+yarn add @react-navigation/material-bottom-tabs react-native-paper
+```
+
+- react-native-paper는 리액트 네이티브에서 머티리얼 디자인을 사용할 수 있게 하는 라이브러리입니다. 자세한 내용은 다음 링크를 참고하세요.
+- https://callstack.github.io/react-native-paper
+- 그다음에는 MainScreen에서 기존에 사용한 createMaterialTopTabNavigator 대신에 createMaterialBottomTabNavigator를 사용해보겠습니다.
+
+> screens/MainScreen.js
+
+```jsx
+import React from 'react';
+import {createMaterialBottomTabNavigator} from '@react-navigation/material-bottom-tabs';
+import {Text, Button, View} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+const Tab = createMaterialBottomTabNavigator();
+
+...
+
+```
+
+- screenOptions Props를 지워주세요.
+
+> screens/MainScreen.js - Tab.Navigator
+
+```jsx
+<Tab.Navigator 
+  initialRouteName="Home"
+  tabBarOptions={{
+    showIcon: true,
+}}>
+```
+
+![image24](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/24.png)
+> 머티리얼 하단 탭 내비게이터
+
+
+- 이 내비게이터에서는 활성화된 탭의 이름이 아이콘 하단에 나타나며, 색상이 진해집니다. 그리고 활성화된 탭에 따라 탭 바의 배경색을 변경할 수도 있습니다.
+
+> screens/MainScreen.js - TabScreen 
+
+```jsx
+<Tab.Screen 
+  name="Home"
+  component={HomeScreen}
+  options={{
+    tabBarLabel: '홈',
+    tabBarIcon: ({color} => <Icon name="home" color={color} size={24} />,
+  }}
+/>
+<Tab.Screen 
+  name="Search"
+  component={SearchScreen}
+  options={{
+    tabBarLabel: '검색',
+    tabBarIcon: ({color}) => (
+      <Icon name="search" color={color} size={24} />
+    ),
+  }}
+/>
+
+<Tab.Screen 
+  name="Notification"
+  component={NotificationScreen}
+  options={{
+    tabBarLabel: '알림',
+    tabBarIcon: ({color}) => (
+      <Icon name="notifications" color={color} size={24} />
+    ),
+    tabBarColor: 'green'
+  }}
+/>
+
+<Tab.Screen 
+  name="Message" 
+  component={MessageScreen}
+  options={{
+    tabBarLabel: '메시지',
+    tabBarIcon: ({color}) => (
+      <Icon name="message" color={color} size={24} />
+    ),
+    tabBarColor: 'blue',
+  }}
+/>
+```
+
+- 이제 특정 탭을 선택하면 탭 바의 배경색이 지정한 색상으로 변경될 것입니다.
+
+![image25](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/25.png)
+
+- Tab.Navigator 컴포넌트에는 다음과 같은 Props를 지정해줄 수 있습니다.
+  - initialRouteName: 초기 화면의 이름
+  - screenOptions: 화면의 기본 설정
+  - backBehavior: 뒤로가기할 때의 작동 방식
+  - shifting: 이 값이 true로 지정되어 있으면 탭이 변경될 때마다 배경색을 변경하고, 활성화된 탭만 탭의 이름을 보여줍니다. 탭의 개수가 세 개 이상이면 이 값은 기본적으로 true로 설정됩니다. 만약 이 값을 false로 지정하면 탭마다 배경색을 따로 따로 지정할 수 없고, 모든 탭에 이름이 보이게 됩니다.
+  - labeled: 탭 아이콘 하단에 탭의 이름을 나타낼지 정하는 값입니다. 이 값을 false로 지정하면 모든 탭에 이름이 나타나지 않습니다(기본값: true).
+  - activeColor: 활성화된 탭의 아이콘과 텍스트의 색상
+  - inactiveColor: 비활성화된 탭의 아이콘과 텍스트의 색상
+  - barStyle: 탭 바에 스타일 적용
+- Tab.Screen의 options Props에는 다음과 같은 값을 설정할 수 있습니다.
+  - tabBarIcon: 아이콘을 보여주는 함수, { focused: boolean, color: string } 타입의 파라미터를 받아옵니다.
+  - tabBarLabel: 탭에 보이는 이름
+  - tabBarBadge: 탭 아이콘에 배지를 보여줍니다. 이 값을 true로 설정하면 아이콘 우측 상단에 빨간색 점을 보여줍니다. 이 값을 문자열 또는 숫자로 입력하면 그 내용이 배지에 나타납니다.
+
+- 다음과 같이 코드를 변경해 탭 아이콘에 배지를 설정해보세요.
+> screens/MainScreen.js 
+
+```jsx
+<Tab.Screen 
+  name="Home" 
+  component={HomeScreen}
+  options={{
+    tabBarLabel: '홈',
+    tabBarIcon: ({color}) => <Icon name="home" color={color} size={24} />,
+    tabBarColor: 'black',
+    tabBarBadge: 'new',
+  }}
+/>
+
+<Tab.Screen
+  name="Search"
+  component={SearchScreen}
+  options={{
+    tabBarLabel: '검색',
+    tabBarIcon: ({color}) => (
+      <Icon name="search" color={color} size={24} />
+    ),
+    tabBarColor: 'gray',
+  }}
+/>
+
+<Tab.Screen
+  name="Notification"
+  component={NotificationScreen}
+  options={{
+    tabBarLabel: '알림',
+    tabBarIcon: ({color}) => (
+      <Icon name="notifications" color={color} size={24} />
+    ),
+    tabBarColor: 'green',
+    tabBarBadge: 30,
+  }}
+/>
+
+<Tab.Screen
+  name="Message"
+  component={MessageScreen}
+  options={{
+    tabBarLabel: '메시지',
+    tabBarIcon: ({color}) => (
+      <Icon name="message" color={color} size={24} />
+    ),
+    tabBarColor: 'blue',
+    tabBarBadge: true,
+  }}
+/>
+```
+
+![image26](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/26.png)
+
+
+## 머티리얼 하단 탭 내비게이터 헤더 타이틀 동기화하기
+
+- 머티리얼 하단 탭 내비게이터는 머티리얼 상단 탭 내비게이터와 마찬가지로 헤더가 없습니다. 그래서 현재 네이티브 스택 내비게이터에서 설정된 타이틀인 Main이 타이틀로 보여지고 있습니다. 이번에는 머티리얼 하단 탭 내비게이터에서 선택된 탭과 헤더의 타이틀을 동기화하는 방법을 알아보겠습니다.
+
+> App.js
+
+```jsx
+import React from 'react';
+import {
+  getFocusedRouteNameFromRoute,
+  NavigationContainer,
+} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import MainScreen from './screens/MainScreen';
+import DetailScreen from './screens/DetailScreen';
+
+const Stack = createNativeStackNavigator();
+
+function getHeaderTitle(route) {
+  const routeName = getFocusedRouteNameFromRoute(route);
+  console.log(routeName);
+  return routeName;
+}
+
+function App() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen 
+          name="Main"
+          component={MainScreen}
+          options={({route}) => ({
+            title: getHeaderTitle(route),
+          })}
+        />
+        <Stack.Screen name="Detail" component={DetailScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+
+export default App;
+```
+
+- Main 화면을 설정한 Stack.Screen을 보면 options Props에 일반 객체가 아닌 객체를 반환하는 함수를 넣어줬습니다. 이렇게 함수를 넣어주면 내비게이션의 상태가 바뀔 때마다 함수를 다시 실행하여 화면의 options 객체를 생성합니다. 이 함수에서는 파라미터를 통해 route와 navigation을 받아와서 사용할 수 있는데요. 해당 함수 내부에서 getHeaderTitle이라는 함수를 호출하여 route 객체로 화면의 제목을 받아오도록 설정했습니다.
+- getHeaderTitle은 우리가 직접 만든 함수입니다. 이 함수 내부에서는 getFocusedRouteName FromRoute라는 함수를 리액트 내비게이션 라이브러리에서 불러와서 사용합니다. getFocused RouteNameFromRoute 함수는 route 객체를 통하여 현재 포커스된 화면의 이름을 조회합니다. 만약 Main 화면 내부에 있는 머티리얼 하단 탭 내비게이터에서 화면이 바뀌면 이 함수를 통해서 어떤 화면이 보이고 있는지 알 수 있습니다. 코드를 저장한 뒤 콘솔을 보면 가장 처음에 undefined가 출력되고 그 이후 탭을 전환하면 선택된 탭의 이름이 나타납니다.
+- 이 함수를 사용할 때 주의할 점은 방금 본 것과 같이 화면이 바뀌기 전까지, 즉 초기에는 undefined가 반환된다는 것입니다. 따라서 undefined일 때는 내부 내비게이터의 기본 화면의 이름을 사용하도록 로직을 구현해야 합니다.
+- getHeaderTitle 함수를 다음과 같이 수정해보세요.
+
+> App.js - getHeaderTitle
+
+```jsx
+function getHeaderTitle(route) {
+  const routeName = getFocusedRouteNameFromRoute(route) ?? 'Home';
+  const nameMap = {
+    Home: '홈',
+    Search: '검색',
+    Notification: '알림'
+    Message: '메시지',
+  };
+  
+  return nameMap[routeName];
+}
+```
+
+- 이 코드에서 사용된 ??는 최신 자바스크립트 문법인 nullish 병합 연산자입니다. 연산자 좌측에 있는 값이 null이거나 undefined면 우측의 값으로 설정합니다.
+- 앞서 언급했듯이 getFocusedRouteNameFromRoute는 화면이 바뀌기 전까지는 undefined를 반환하기 때문에, undefined인 경우 'Home' 값으로 설정하도록 코드를 작성했습니다. 그리고 화면의 name과 타이틀 값을 잇는 nameMap 객체를 만들어서 해당되는 타이틀을 보여주도록 구현했습니다.
+
+![image27](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/05%20%EB%A6%AC%EC%95%A1%ED%8A%B8%20%EB%82%B4%EB%B9%84%EA%B2%8C%EC%9D%B4%EC%85%98%EC%9C%BC%EB%A1%9C%20%EC%97%AC%EB%9F%AC%20%ED%99%94%EB%A9%B4%20%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/images/27.png)
+> 타이틀 동기화
 
 ---
 
 # 내비게이션 Hooks
 
+## useNavigation
 
+- useNavigation Hook을 사용하면 Screen으로 사용되고 있지 않은 컴포넌트에서도 navigation 객체를 사용할 수 있습니다. OpenDetailButton 컴포넌트를 다음과 같이 수정해보세요.
