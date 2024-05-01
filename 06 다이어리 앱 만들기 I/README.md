@@ -72,6 +72,112 @@ function App() {
 export default App;
 ```
 
+![image1](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/06%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/1.png)
+> 화면 설계 
+
+- DayLog 프로젝트에는 두 종류의 내비게이션을 사용
+  - RootStack은 네이티브 스택 내비게이션
+  - MainTab은 하단 탭 내비게이션
+- FeedsScreen: 작성한 글을 목록 형태로 보여주는 화면
+- CalendarScreen: 달력 형태로 글을 조회하는 화면
+- SearchScreen: 글을 검색할 수 있는 화면
+- WriteScreen은 글을 작성하거나 수정하는 화면인데, MainTab에 넣지 않고 RootStack에 넣어서 이 화면이 나타날 때는 하단 탭이 나타나지 않도록 설정
+- 프로젝트 디렉터리에 screens 디렉터리를 만들고 다음과 같이 화면들을 준비
+
+> screens/FeedsScreen.js
+
+```jsx
+import React from 'react';
+import {StyleSheet, View} from 'react-native';
+
+function FeedsScreen() {
+    return <View style={styles.block} />;
+}
+
+const styles = StyleSheet.create({
+    block: {},
+});
+
+export default FeedsScreen;
+```
+
+> screens/CalendarScreen.js
+
+```jsx
+import React from 'react';
+import {StyleSheet, View} from 'react-native';
+
+function CalendarScreen() {
+    return <View style={styles.block} />;
+}
+
+const styles = StyleSheet.create({
+    block: {},
+});
+
+export default CalendarScreen;
+```
+
+> screens/SearchScreen.js
+
+```jsx
+import React from 'react';
+import {StyleSheet, View} from 'react-native';
+
+function SearchScreen() {
+    return <View style={styles.block} />;
+}
+
+const styles = StyleSheet.create({
+    block: {},
+});
+
+export default SearchScreen;
+```
+
+> screens/WriteScreen.js
+
+```jsx
+import React from 'react';
+import {StyleSheet, View} from 'react-native';
+
+function WriteScreen() {
+    return <View style={styles.block} />;
+}
+
+const styles = StyleSheet.create({
+    block: {},
+});
+
+export default WriteScreen;
+```
+
+- 하단 탭 내비게이션을 사용하는 MainTab 컴포넌트 제작
+
+> screens/MainTab.js
+
+```jsx
+import React from 'react';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import FeedsScreen from './FeedsScreen';
+import CalendarScreen from './CalendarScreen';
+import SearchScreen from './SearchScreen';
+
+const Tab = createBottomTabNavigator();
+
+function MainTab() {
+    return (
+        <Tab.Navigator>
+            <Tab.Screen name="Feeds" component={FeedScreen} />
+            <Tab.Screen name="Calendar" component={CalendarScreen} />
+            <Tab.Screen name="Search" component={SearchScreen} />
+        </Tab.Navigator>
+    );
+}
+
+export default MainTab;
+```
+
 ---
 # Context API 사용하기 
 
