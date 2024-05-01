@@ -29,8 +29,47 @@ npx pod-install
 
 - react-native-vector-icons의 MaterialIcons를 사용할 수 있도록 Info.plist를 수정
 
-```xml
+> ios/DayLog/info.plist
 
+```xml
+...
+    <key>UIViewControllerBasedStatusBarAppearance</key>
+    <false/>
+    <key>UIAppFonts</key>
+    <array>
+        <string>MaterialIcons.ttf</string>
+    </array>
+ </dict>
+</plist>
+```
+
+- build.gradle 파일을 열어서 최하단에 다음 코드를 추가해주세요.
+
+> android/app/build.gradle - 최하단
+
+```groovy
+project.ext.vectoricons = [
+    iconFontNames: [ 'MaterialIcons.ttf' ]
+]
+
+apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+```
+
+## react-navigation 적용하기
+
+- App 컴포넌트의 내용을 모두 비우고, NavigationContainer 컴포넌트를 불러와 사용
+
+> App.js
+
+```jsx
+import React from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+
+function App() {
+    return <NavigationContainer></NavigationContainer>;
+}
+
+export default App;
 ```
 
 ---
