@@ -73,6 +73,7 @@ export default App;
 ```
 
 ![image1](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/06%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/1.png)
+
 > 화면 설계 
 
 - DayLog 프로젝트에는 두 종류의 내비게이션을 사용
@@ -177,6 +178,125 @@ function MainTab() {
 
 export default MainTab;
 ```
+
+- 네이티브 스택 내비게이션을 사용하는 RootStack 컴포넌트
+
+> screens/RootStack.js
+
+```jsx
+import React from 'react';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import MainTab from './MainTab';
+import WriteScreen from './WriteScreen';
+
+const Stack = createNativeStackNavigator();
+
+function RootStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen 
+        name="MainTab"
+        component={MainTab}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen name="Write" component={WriteScreen} />
+    </Stack.Navigator>
+  );
+}
+
+export default RootStack; 
+```
+
+- 네이티브 스택 내비게이터에 MainTab 화면을 설정할 때 headerShown 값을 false로 설정하세요. 이렇게 설정하지 않으면 헤더 두 개가 중첩되어 나타납니다.
+- 내비게이션을 사용하는 컴포넌트의 이름을 지을 때 따로 정해진 규칙은 없으므로, 자유롭게 지으면 됩니다. 예를 들어 MainTab 컴포넌트의 경우 이를 하나의 화면으로 간주해 MainTabScreen 또는 MainScreen으로 이름을 정해도 됩니다. RootStack도 마찬가지로 RootStackScreen이나 RootScreen이라는 이름을 사용해도 상관없습니다.
+- 내비게이션 전용 컴포넌트와 일반 화면을 구분하기 위해 이름에 규칙을 사용할 것, 내비게이션 전용 컴포넌트에는 MainTab과 RootStack처럼 이름 뒤에 Tab이나 Stack을 넣겠습니다.
+- RootStack 컴포넌트를 따로 지정하지 않고 바로 App 컴포넌트 내부에서 네이티브 스택 내비게이터를 사용하는 것도 가능합니다만, 이 프로젝트에서는 App 컴포넌트의 간결함을 위해 이렇게 RootStack 컴포넌트를 따로 분리합니다.
+- App 컴포넌트에서 RootStack 컴포넌트를 사용
+
+> App.js
+
+```jsx
+import React from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import RootStack from './screens/RootStack';
+
+function App() {
+  return (
+    <NavigationContainer>
+      <RootStack />
+    </NavigationContainer>
+  );
+}
+
+export default App;
+```
+
+- iOS와 안드로이드 시뮬레이터를 가동해 지금까지 만든 결과물 확인
+
+```
+yarn ios
+yarn android
+```
+
+![image2](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/06%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/2.png)
+
+- 탭 아이콘 설정, 화면 타이틀 설정, 탭 스타일 변경
+
+> screens/MainTab.js
+
+```jsx
+import React from 'react';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import FeedScreen from './FeedScreen';
+import CalendarScreen from './CalendarScreen';
+import SearchScreen from './SearchScreen';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+const Tab = createBottomTabNavigator();
+
+function MainTab() {
+  return (
+    <Tab.Navigator
+      tabBarOptions={{
+        showLabel: false,
+        activeTintColor: '#009688',
+      }}>
+      <Tab.Screen 
+        name="Feeds" 
+        component={FeedsScreen}
+        options={{
+          tabBarIcon: ({color, size}) => (
+            <Icon name="view-stream" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen 
+        name="Calendar"
+        component={CalendarScreen}
+        options={{
+          tabBarIcon: ({color, size}) => (
+            <Icon name="event" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen 
+        name="Search"
+        component={SearchScreen}
+        options={{
+          tabBarIcon: ({color, size}) => (
+            <Icon name="search" size={size} color={color} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+export default MainTab;
+```
+
+![image2](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/06%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/2.png)
+> 네비게이션 아이콘 및 헤더 이름 설정
 
 ---
 # Context API 사용하기 
