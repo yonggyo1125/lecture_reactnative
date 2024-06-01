@@ -600,8 +600,323 @@ export default CalendarScreen;
 
 - 코드를 다 작성했으면 피드 화면의 TextInput에 Hello World를 입력한 뒤, 달력 화면을 열어서 작성한 문구가 그대로 나타났는지 확인
 
+![image5](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/06%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/5.png)
+
+- 서로 다른 화면에서 상태를 공유하는 방법을 배웠습니다. DayLog 프로젝트에서는 앞으로 이런 방법으로 화면 간에 앱의 상태를 공유할 예정입니다. 
+- 잘 작동하는 것을 확인했다면 이번 절에서 FeedsScreen과 CalendarScreen에 작성한 코드를 모두 초기화해주세요.
+
+> screens/FeedsScreen.js
+
+```jsx
+import React from 'react';
+import {StyleSheet, View} from 'react-native';
+
+function FeedsScreen() {
+  return <View style={styles.block} />;
+}
+
+const styles = StyleSheet.create({
+  block: {},
+});
+
+export default FeedsScreen;
+```
+
+> screens/CalendarScreen.js
+
+```jsx
+import React from 'react';
+import {StyleSheet, View} from 'react-native';
+
+function CalendarScreen() {
+  return <View style={styles.block} />;
+}
+
+const styles = StyleSheet.create({
+  block: {},
+});
+
+export default CalendarScreen;
+```
+
 ---
 # 새 글 작성하기 
+
+>  WriteScreen의 기능을 구현하겠습니다. 그리고 FeedsScreen에 WriteScreen을 열 수 있는 FloatingWriteButton도 만들어봅니다.
+
+## FloatingWriteButton 만들기
+
+- FloatingWriteButton은 FeedsScreen의 우측 모서리에 나타나는 둥근 버튼입니다.
+- 프로젝트 루트 디렉터리에 components 디렉터리를 만들고, 그 안에 다음 파일을 작성
+
+> components/FloatingWriteButton.js
+
+```jsx
+import React from 'react';
+import {Platform, Pressable, StyleSheet, View} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+function FloatingWriteButton() {
+  return (
+    <View style={styles.wrapper}>
+      <Pressable 
+        style={({pressed}) => [
+          styles.button,
+          Platform.OS === 'ios' && {
+            opacity: pressed ? 0.6 : 1,
+          }
+        ]}
+        android_ripple={{color: 'white'}}>
+        <Icon name="add" size={24} style={styles.icon} />
+      </Pressable>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrapper: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    // iOS 전용 그림자 설정
+    shadowColor: '#4d4d4d',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    // 안드로이드 전용 그림자 설정
+    elevation: 5,
+    // 안드로이드에서 물결 효과가 영역 밖으로 나가지 않도록 설정
+    // iOS에서는 overflow가 hidden일 경우 그림자가 보여지지 않음
+    overflow: Platform.select({android: 'hidden'}),
+  },
+  button: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#009688',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  icon: {
+    color: 'white',
+  }
+});
+
+export default FloatingWriteButton; 
+```
+
+- 리액트 네이티브 v0.63에 새로 도입된 컴포넌트인 Pressable을 사용했습니다(이전에 배운 Touchable* 컴포넌트와 비슷합니다).
+- Pressable 컴포넌트는 TouchableWithoutFeedback과 성격이 비슷하지만, 기능이 더 많습니다. android_ripple Props를 설정해 안드로이드에서 물결 효과를 보여줄 수도 있고, 스타일을 설정할 때 pressed 값을 인식해 컴포넌트가 눌리면 동적인 스타일을 적용할 수도 있습니다.
+- 이 컴포넌트의 경우 iOS 환경에서는 버튼을 눌렀을 때 투명도를 가지게 설정했고, 안드로이드에서는 물결 효과가 나타나게 만들었습니다.
+- styles.wrapper에서는 position: 'absolute' 스타일을 부여했는데요. 이 설정을 통해 컴포넌트의 위치를 좌푯값 left, right, top, bottom으로 지정할 수 있습니다. 앞의 코드에서는 right와 bottom 값을 지정해 우측 모서리에서 16dp만큼의 여백을 두었습니다.
+- 그리고 컴포넌트에 그림자 스타일을 적용해줬는데요. iOS와 안드로이드는 그림자 설정을 위한 스타일 이름이 다른 것에 주의하세요. 또한, 안드로이드에서 물결 효과가 원 밖으로 나가지 않도록 overflow를 설정해줬습니다. iOS에서는 overflow: 'hidden' 스타일이 적용되면 그림자도 보여지지 않기 때문에 안드로이드에서만 해당 스타일을 적용하도록 만들었습니다.
+- 컴포넌트를 다 작성했으면 FeedsScreen에서 방금 만든 컴포넌트를 불러와 사용해보세요. 그리고 styles.block에 flex: 1을 넣어주세요. 만약 이 값을 넣지 않으면 해당 View가 비어있을 때는 높이가 0으로 간주됩니다. 그러면 방금 만든 컴포넌트에서 position: 'absolute' 설정이 제대로 작동하지 않아 화면에 나타나지 않을 것입니다.
+
+> screens/FeedsScreen.js
+
+```jsx
+import React from 'react';
+import {StyleSheet, View} from 'react-native';
+import FloatingWriteButton from '../components/FloatingWriteButton';
+
+function FeedsScreen() {
+  return (
+    <View style={styles.block}>
+      <FloatingWriteButton />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  block: {
+    flex: 1,
+  }
+});
+
+export default FeedsScreen;
+```
+
+![image6](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/06%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/6.png)
+> FloatingWriteButton
+
+- 해당 버튼을 누르면 WriteScreen을 띄우도록 컴포넌트를 수정
+
+> components/FloatingWriteButton.js
+
+```jsx
+import {useNavigation} from '@react-navigation/native';
+import React from 'react';
+import {Platform, Pressable, StyleSheet, View} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+function FloatingWriteButton() {
+  const navigation = useNavigation();
+  const onPress = () => {
+    navigation.navigate("Write");
+  };
+  
+  return (
+    <View style={styles.wrapper}>
+      <Pressable
+        style={({pressed}) => [
+          styles.button,
+          Platform.OS === 'ios' && {
+            opacity: pressed ? 0.6 : 1,
+          },
+        ]}
+        android_ripple={{color: 'white'}}
+        onPress={onPress}>
+        <Icon name="add" size={24} style={styles.icon} />
+      </Pressable>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  ...
+});
+
+export default FloatingWriteButton;
+```
+
+## WriteScreen UI 준비하기
+
+- WriteScreen의 UI를 준비해봅시다. 우선 WriteScreen에서 기본적으로 보이는 헤더를 숨겨줍니다.
+
+> screens/RootStack.js
+
+```jsx
+import React from 'react';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import MainTab from './MainTab';
+import WriteScreen from './WriteScreen';
+
+const Stack = createNativeStackNavigator();
+
+function RootStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen 
+        name="MainTab"
+        component={MainTab}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen 
+        name="Write"
+        component={WriteScreen}
+        options={{headerShown: false}}
+      />
+    </Stack.Navigator>
+  );
+}
+
+export default RootStack;
+```
+
+### WriteHeader 만들기
+
+> components/WriteHeader.js
+
+```jsx
+import {useNavigation} from '@react-navigation/native';
+import React from 'react';
+import {Pressable, StyleSheet, View} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+function WriteHeader() {
+  const navigation = useNavigation();
+  const onGoBack = () => {
+    navigation.pop();
+  };
+  
+  return (
+    <View style={styles.block}>
+      <View style={styles.iconButtonWrapper}>
+        <Pressable
+          style={styles.iconButton}
+          onPress={onGoBack}
+          android_ripple={{color: '#ededed'}}>
+          <Icon name="arrow-back" size={24} color='#424242' />
+        </Pressable>
+      </View>
+      <View style={styles.buttons}>
+        <View style={[styles.iconButtonWrapper, styles.marginRight]}>
+          <Pressable
+            style={[styles.iconButton]}
+            android_ripple={{color: '#ededed'}}>
+            <Icon name="delete-forever" size={24} color="#ef5350" />
+          </Pressable>
+        </View>
+        <View style={styles.iconButtonWrapper}>
+          <Pressable
+            style={styles.iconButton}
+            android_ripple={{color: '#ededed'}}>
+            <Icon name="check" size={24} color="#009688" />
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+
+const styles = StyleSheet.create({
+  block: {
+    height: 48,
+    paddingHorizontal: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  iconButtonWrapper: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  iconButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
+  buttons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  marginRight: {
+    marginRight: 8,
+  }
+});
+
+export default WriteHeader;
+```
+
+- styles.block에서 flex-direction: 'row'로 설정해서 컴포넌트들이 가로 방향으로 나타나게 했습니다. 
+- 여기서 justifyContent: 'space-between'이라는 스타일이 적용되었는데, 이렇게 설정하면 해당 컴포넌트 내부에 렌더링된 요소들 사이 여백이 꽉 채워집니다. 만약 컴포넌트 내부에 요소가 여러 개 있으면 다음과 같이 요소들 사이의 여백이 균일하게 주어집니다.
+
+![image7](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/06%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/7.png)
+> space-between
+
+- 현재 컴포넌트에 요소가 두 개 있으므로 하나는 좌측 끝, 하나는 우측 끝에 붙어서 보입니다.
+- 헤더에는 버튼이 세 개 있습니다. 좌측에 뒤로가기 버튼, 우측에 삭제 버튼과 완료 버튼이 있습니다. 삭제 버튼은 작성된 글을 열었을 때만 보여야 하는데 당장은 UI 구현을 위해서 모든 상황에 보이게 만들었습니다.
+- 반복되는 코드를 발견했을 때 이를 컴포넌트로 만들어서 컴포넌트를 재사용하는 형태로 리팩토링하는 습관을 가진다면 프로젝트 유지보수에 용이
+- 헤더의 버튼 컴포넌트를 쉽게 재사용할 수 있도록 따로 분리해 작성
+
+> components/TransparentCircleButton.js
+
+```jsx
+import React from 'react';
+import {Platform, Pressable, StyleSheet, View} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+
+
+```
 
 ---
 # 글 목록 보여주기
