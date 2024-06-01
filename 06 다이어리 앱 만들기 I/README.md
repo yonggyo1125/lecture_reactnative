@@ -535,6 +535,71 @@ function App() {
 export default App;
 ```
 
+- 이렇게 저장하면 FeedsScreen에서 오류가 발생합니다. 기존 Context에서는 문자열 값만 주었지만 이번에는 객체 형태의 값을 받아왔기 때문
+- FeedsScreen에서 값을 수정하고 수정된 값을 보여주겠습니다.
+
+> screens/FeedsScreen.js
+
+```jsx
+import React, {useContext} from 'react';
+import {StyleSheet, View, TextInput} from 'react-native';
+import LogContext from '../contexts/LogContext';
+
+function FeedsScreen() {
+  const {text, setText} = useContext(LogContext);
+  return (
+    <View style={styles.bold}>
+      <TextInput 
+        value={text}
+        onChangeText={setText}
+        placeholder="텍스트를 입력하세요."
+        style={styles.input}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  input: {
+    padding: 16,
+    backgroundColor: 'white',
+  }
+});
+
+export default FeedsScreen;
+```
+
+- 그다음에는 CalendarScreen에서 LogContext가 지닌 값을 화면에 띄워보세요
+
+> screens/CalendarScreen.js
+
+```jsx
+import React, {useContext} from 'react';
+import {StyleSheet, Text, View} from 'react-native';
+import LogContext from '../contexts/LogContext';
+
+function CalendarScreen() {
+  const {text} = useContext(LogContext);
+  return (
+    <View style={styles.block}>
+      <Text style={styles.text}>text: {text}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  block: {},
+  text: {
+    padding: 16,
+    fontSize: 24
+  }
+});
+
+export default CalendarScreen;
+```
+
+- 코드를 다 작성했으면 피드 화면의 TextInput에 Hello World를 입력한 뒤, 달력 화면을 열어서 작성한 문구가 그대로 나타났는지 확인
+
 ---
 # 새 글 작성하기 
 
