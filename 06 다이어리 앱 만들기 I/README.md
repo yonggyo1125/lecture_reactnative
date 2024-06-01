@@ -915,8 +915,382 @@ import {Platform, Pressable, StyleSheet, View} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 
+function TransparentCircleButton({name, color, hasMarginRight, onPress}) {
+  return (
+     <View
+      style={[styles.iconButtonWrapper, hasMarginRight && styles.rightMargin]}>
+        <Pressable
+          style={({pressed}) => [
+            styles.iconButton,
+            Platform.OS === 'ios' && pressed && {
+              backgroundColor: '#efefef',
+            },
+          ]}
+          onPress={onPress}
+          android_ripple={{color: '#ededed'}}>
+          <Icon name={name} size={24} color={color} />
+        </Pressable>
+     </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  iconButtonWrapper: {
+    width: 32,
+    height: 32, 
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  iconButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
+  rightMargin: {
+    marginRight: 8,
+  }
+});
+
+export default TransparentCircleButton;
+```
+
+- 이 컴포넌트에서는 4개의 Props를 받아오도록 설정했습니다.
+  - name: 아이콘 이름
+  - color: 아이콘 색상
+  - hasMarginRight: 우측 여백 유무
+  - onPress: 버튼을 눌렀을 때 호출할 함수
+- 그리고 컴포넌트를 분리하는 과정에서 iOS의 경우 버튼을 클릭할 때 배경색을 설정하도록 처리해줬습니다.
+- 컴포넌트 작성이 끝났으면 기존에 만든 버튼들을 방금 만든 컴포넌트로 대체해주세요.
+
+> components/WriteHeader.js
+
+```jsx
+import {useNavigation} from '@react-navigation/native';
+import React from 'react';
+import {StyleSheet, View} from 'react-native';
+import TransparentCircleButton from './TransparentCircleButton';
+
+function WriteHeader() {
+  const navigation = useNavigation();
+  const onGoBack = () => {
+    navigation.pop();
+  };
+  
+  return (
+    <View style={styles.block}>
+      <View style={styles.iconButtonWrapper}>
+        <TransparentCircleButton
+          onPress={onGoBack}
+          name="arrow-back"
+          color="#424242"
+        />
+      </View>
+      <View style={styles.buttons}>
+        <TransparentCircleButton
+          name="delete-forever"
+          color="#ef5350"
+          hasMarginRight
+        />
+        <TransparentCircleButton name="check" color="#009688" />
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  block: {
+    height: 48,
+    paddingHorizontal: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  buttons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  }
+});
+
+export default WhiteHeader;
+```
+
+- 이제 이 컴포넌트를 WriteScreen에서 사용해 컴포넌트가 잘 나타나는지 확인
+
+> screens/WriteScreen.js
+
+```jsx
+import React from 'react';
+import {StyleSheet, View} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import WriteHeader from '../components/WriteHeader';
+
+function WriteScreen() {
+  return (
+    <SafeAreaView style={styles.block}>
+      <WriteHeader />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  block: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+});
+
+export default WriteScreen;
+```
+
+- 현재 내비게이션의 헤더를 없애고 우리가 직접 만든 헤더를 사용하고 있기 때문에 컴포넌트에 SafeAreaView를 사용해 iOS에서 상태 바 영역과 내용이 겹치지 않게 만들어줘야 합니다. 추가로, 배경색을 흰색으로 설정해주세요.
+
+![image8](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/06%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/8.png)
+> WriteHeader 
+
+- 이번에는 WriteEditor 컴포넌트를 만들어봅시다. 이 컴포넌트에서는 TextInput을 두 개 사용해 제목과 내용을 작성하는 기능을 구현할 것입니다.
+
+> components/WriteEditor.js
+
+```jsx
+import React from 'react';
+import {View, StyleSheet, TextInput} from 'react-native';
+
+function WriteEditor({title, body, onChangeTitle, onChangeBody}) {
+  return (
+    <View style={styles.block}>
+      <TextInput 
+        placeholder="제목을 입력하세요"
+        style={styles.titleInput}
+        returnKeyType="next"
+        onChangeText={onChangeTitle}
+        value={title}
+      />
+      <TextInput 
+        placeholder="당신의 오늘을 기록해보세요"
+        type={styles.bodyinput}
+        multiline
+        textAlignVertical="top"
+        onChangeText={onChangeBody}
+        value={body}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  block: { flex: 1, padding: 16 },
+  titleInput: {
+    paddingVertical: 0,
+    fontSize: 18,
+    marginBottom: 16,
+    color: '#263238',
+    fontWeight: 'bold',
+  },
+  bodyInput: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 0,
+    color: '#263238',
+  }
+});
+
+export default WriteEditor;
+```
+
+- 두 번째 TextView를 보면 multiline Props에 값을 지정하지 않았습니다. 
+- 컴포넌트를 사용할 때 이렇게 Props의 이름만 쓰고 따로 값을 지정하지 않으면 값이 true로 지정됩니다. 즉, multiline={true}와 동일한 코드입니다. TextView에 이 값이 true로 설정되면 여러 줄을 작성할 수 있습니다.
+- 이 컴포넌트를 WriteScreen에서 보여주세요.
+
+> screens/WriteScreen.js 
+
+```jsx
+import React from 'react';
+import {StyleSheet, View} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-content';
+import WriteEditor from '../components/WriteEditor';
+import WriteHeader from '../components/WriteHeader';
+
+function WriteScreen() {
+  return (
+    <SafeAreaView style={styles.block}>
+      <WriteHeader />
+      <WriteEditor />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  block: {
+    flex: 1,
+    backgroundColor: 'white',
+  }
+});
+
+export default WriteScreen;
+```
+
+![image9](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/06%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/9.png)
+> WriteEditor
+
+## useRef로 컴포넌트 레퍼런스 선택하기
+
+- useRef는 함수 컴포넌트에서 컴포넌트의 레퍼런스를 선택할 수 있게 하는 Hook입니다.
+- 제목을 입력하고 Enter를 누르면 하단 내용으로 포커스를 이동시키고 싶다고 합시다. 이럴 때는 내용 TextInput의 레퍼런스를 선택해서 포커스해줘야 합니다.
+- 먼저 내용 TextInput의 레퍼런스를 선택해봅시다.
+
+> components/WriteEditor.js
+
+```jsx
+import React, {useRef} from 'react';
+import {View, StyleSheet, TextInput} from 'react-native';
+
+function WriteEditor({title, body, onChangeTitle, onChangeBody}) {
+  const bodyRef = useRef();
+  
+  return (
+    <View style={styles.block}>
+      <TextInput 
+        placeholder="제목을 입력하세요"
+        style={styles.titleInput}
+        returnKeyType="next"
+        onChangeText={onChangeTitle}
+        value={title}
+      />
+      <TextInput 
+        placehoolder="당신의 오늘을 기록해보세요"
+        style={styles.bodyInput}
+        multiline
+        textAlignVertical="top"
+        onChangeText={onChangeBody}
+        value={body}
+        ref={bodyRef}
+      />
+    </View>
+  );  
+}
+
+... 
 
 ```
+
+- 이렇게 ref를 생성해 TextInput의 Props로 지정해주면 원하는 컴포넌트의 레퍼런스를 선택할 수 있습니다. TextInput의 레퍼런스에는 다음과 같은 메서드가 구현되어 있습니다.
+  - .focus(): TextInput에 포커스를 잡아줍니다.
+  - .blur(): TextInput에 포커스를 해제합니다.
+  - .clear(): TextInput의 내용을 모두 비웁니다.
+- 제목 TextInput에서 onSubmitEditing Props를 통해 Enter를 눌렀을 때 내용 TextInput으로 포커스해보겠습니다.
+
+> components/WriteEditor.js
+
+```jsx
+import React, {useRef} from 'react';
+import {View, StyleSheet, TextInput} from 'react-native';
+
+function WriteEditor({title, body, onChangeTitle, onChangeBody}) {
+  const bodyRef = useRef();  
+    
+  return (
+    <View style={styles.bloc}>
+      <TextInput
+        placeholder="제목을 입력하세요"
+        style={styles.titleInput}
+        returnKeyType="next"
+        onChangeText={onChangeTitle}
+        value={title}
+        onSubmitEditing={() => {
+          bodyRef.current.focus();
+        }}
+      />
+    ...
+  );
+}
+
+...
+
+```
+
+- useRef로 선택한 레퍼런스는 .current 값을 조회해 확인할 수 있습니다.
+- 이제 제목을 입력하고 Enter를 눌러보세요. 내용으로 포커스가 이동했나요? (참고로 안드로이드에서 한글을 입력하는 중에 Enter를 누르면 스페이스가 먼저 들어가고, 그다음에 Enter를 한 번 더 눌러야 내용으로 포커스가 이동할 것입니다.)
+
+## KeyboardAvoidingView로 화면 감싸기
+
+> 내용 TextInput에서 Enter를 여러 번 눌러서 화면에서 기본적으로 보여줄 수 있는 줄 수를 초과할 경우, 안드로이드에서는 별 문제없이 스크롤할 수 있지만 iOS에서는 하단 내용이 잘리게 됩니다. 따라서 KeyboardAvoidingView로 WriteScreen 내부의 내용을 감싸줘야 작성한 내용이 엄청 길어져 줄이 많아졌을 때도 문제없이 글을 작성할 수 있습니다.
+
+> screens/WriteScreen.js
+
+```jsx
+import React from 'react';
+import {KeyboardAvoidingView, Platform, StyleSheet} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import WriteEditor from '../components/WriteEditor';
+import WriteHeader from '../components/WriteHeader';
+
+function WriteScreen() {
+  return (
+    <SafeAreaView style={styles.block}>
+      <KeyboardAvoidingView
+        style={styles.avoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <WriteHeader />
+        <WriteEditor />
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  block: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  avoidingView: {
+    flex: 1,
+  }
+});
+
+...
+
+```
+
+## WhiteScreen에서 텍스트 상태 관리하기
+
+- 이번에는 WriteScreen에서 제목과 내용 텍스트의 상태를 관리해보겠습니다. 이전에 배운 useState Hook을 사용하면 됩니다.
+
+> screens/WriteScreen.js
+
+```jsx
+import React, {useState} from 'react';
+import {KeyboardAvoidingView, Platform, StyleSheet} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import WriteEditor from '../components/WriteEditor';
+import WriteHeader from '../components/WriteHeader';
+
+function WriteScreen() {
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  
+  return (
+    <SafeAreaView style={styles.block}>
+      <KeyboardAvoidingView
+        style={styles.avoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <WriteHeader />
+        <WriteEditor 
+          title={title}
+          body={body}
+          onChangeTitle={setTitle}
+          onChangeBody={setBody}
+        />
+      </KeyBoardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+...
+
+```
+- useState를 써서 만든 상태 값과 업데이트 함수를 WriteEditor에 Props로 전달해주면 됩니다.
 
 ---
 # 글 목록 보여주기
