@@ -1658,5 +1658,128 @@ export default FeedsScreen;
 ![image10](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/06%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/10.png)
 > FeedsScreen
 
+## date-fns로 날짜 포맷팅하기
+
+- 현재 FeedListItem에서 시간을 보여줄 때 Date 객체의 toLocaleString()을 사용하고 있는데, 작성한 시간에 따라 다음과 같은 형식으로 시간이 보이도록 수정해보겠습니다.
+  - 방금 전
+  - 3분 전
+  - 1시간 전
+  - 3일 전 
+  - 2021년 8월 23일 07:00
+- 이때 유용하게 사용할 수 있는 라이브러리가 date-fns입니다. 이 라이브러리는 날짜/시간에 관련한, 다양한 기능을 제공합니다. 다음 명령어를 사용해 라이브러리를 설치하세요.
+
+```
+yarn add date-fns
+```
+
+- 이 라이브러리에 어떤 기능이 있는지 확인하고 싶다면 다음 링크를 참고 [https://date-fns.org/docs/Getting-Started](https://date-fns.org/docs/Getting-Started)
+- 이 라이브러리에서 불러와 사용할 함수는 다음과 같습니다.
+  - formatDistanceToNow: 현재 시각을 기준으로 단어를 사용해 시간을 나타냅니다. (예: 5분 전)
+  - format: 다양한 형태로 날짜를 포맷팅합니다.
+
+- 다음 함수를 FeedListItem에 작성하세요.
+
+> components/FeedListItem.js
+
+```jsx
+import React from 'react';
+import {Platform, Pressable, StyleSheet, Text} from 'react-native';
+import {format, formatDistanceToNow} from 'date-fns';
+import {ko} from 'date-fns/locale';
+
+function formatDate(date) {
+  const d = new Date(date);
+  const now = Date.now();
+  const diff = (now - d.getTime()) / 1000;
+  
+  if (diff < 60 * 1) {
+    return '방금 전';
+  }
+  
+  if (diff < 60 * 60 * 24 * 3) {
+    return formatDistanceToNow(d, {addSuffix: true, locale: ko});
+  }
+  return format(d, 'PPP EEE p', {locale: ko});
+}
+
+...
+
+```
+
+- 여기서 diff 값은 현재 시간과 파라미터로 받아온 시간의 차이를 초 단위로 계산한 값입니다. now - d.getTime()의 단위는 밀리세컨드이기 때문에 계산하기 용이하도록 1000으로 미리 나눠줬습니다.
+- 글이 작성된 시간이 1분 미만이라면 ‘방금 전’이라고 보여주고, 3일 미만이라면 formatDistanceToNow를 사용해 단어로(예: 1시간 전, 3일 전) 보여주고, 3일 이상이라면 format을 사용해 날짜와 시간이 나오도록 설정했습니다.
+- formatDistanceToNow에서 addSuffix는 포맷팅된 문자열 뒤에 ‘전’ 또는 ‘후’ 접미사를 붙이는 옵션이고, locale은 언어입니다. 언어는 date-fns/locale에서 불러올 수 있습니다. date-fns는 전 세계에서 사용하는 주요 언어를 대부분 지원합니다. 우리는 현재 한국어로 설정한 상태입니다. format도 마찬가지로 언어를 설정해줬습니다.
+- format 함수에서 'PPP EEE p'라고 작성했는데, PPP는 날짜, EEE는 요일, p는 시간을 나타냅니다. 자세한 정보는 문서를 확인하세요. [https://date-fns.org/v2.16.1/docs/format](https://date-fns.org/v2.16.1/docs/format)
+- 함수를 모두 작성했으면 기존에 날짜를 보여주던 부분을 수정해주세요.
+
+> components/FeedListItem.js - 날짜 Text
+
+```jsx
+<Text style={styles.date}>{formatDate(date)}</Text>
+```
+
+- 날짜에 따라 포매팅이 잘 이뤄지는지 확인 - LogContext의 기본값을 임의로 지정해 보고 확인합니다.
+
+> contexts/LogContext.js - logs
+
+```jsx
+const [logs, setLogs] = useState([
+  {
+    id: uuidv4(),
+    title: 'Log 03',
+    body: 'Log 03',
+    date: new Date().toISOString(),
+  },
+  {
+    id: uuidv4(),
+    title: 'Log 02',
+    body: 'Log 02',
+    date: new Date(Date.now() - 1000 * 60 * 3).toISOString(),
+  },
+  {
+    id: uuidv4(),
+    title: 'Log 01',
+    body: 'Log 01',
+    date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
+  },
+]);
+```
+
+![image11](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/06%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/11.png)
+> date-fns를 사용한 날짜 포맷팅
+
 ---
+
 # Animated로 애니메이션 적용하기 
+
+- 지금 FeedsList에는 사용자 경험과 관련해 한 가지 문제가 있습니다. 항목이 많아져서 스크롤하게 됐다고 가정해봅시다. 그러면 우측 하단의 버튼이 항목의 내용을 가리게 됩니다.
+
+![image12](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/06%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/12.png)
+> 항목 내용을 가리는 버튼
+
+- 이 문제를 해결하려면 사용자가 스크롤을 최하단으로 내렸을 때 해당 버튼을 화면에서 숨겨야 합니다. 하지만 갑자기 화면에서 없어져버리면 부자연그럽습니다. 따라서 버튼이 하단으로 사라지는 애니메이션을 적용해 버튼을 숨기겠습니다.
+
+## 애니메이션 연습하기
+- 리액트 네이티브에서 애니메이션을 구현할 때는 Animated라는 객체를 사용합니다.
+- Animated를 사용하려면 일단 Value를 하나 만들어야 합니다.
+
+```javascript
+import React, {useRef} from 'react';
+import {Animated} from 'react-native';
+
+function Sample() {
+  const animation = useRef(new Animated.Value(1)).current;
+}
+```
+
+- Value를 만들 때는 이렇게 useRef를 사용해야 합니다. 이전에 컴포넌트의 레퍼런스를 선택할 때 useRef를 사용했는데, 레퍼런스 선택 외에 특정 값을 컴포넌트 생성 시에 설정하고, 컴포넌트가 사라질 때까지 재사용하고 싶은 경우에도 이와 같이 useRef를 사용해 구현할 수 있답니다.
+- Value의 생성자 함수의 인자에는 초깃값을 넣어줍니다. 그리고 이 값을 리액트 컴포넌트의 스타일에 적용할 때는 다음과 같이 사용합니다.
+
+```jsx
+<Animated.View style={{opacity: animation}}></Animated.View>
+```
+
+- 즉, Animated. 뒤에 사용하고 싶은 리액트 네이티브 컴포넌트의 이름을 넣어주면 됩니다
+
+
+
