@@ -1292,6 +1292,230 @@ function WriteScreen() {
 ```
 - useState를 써서 만든 상태 값과 업데이트 함수를 WriteEditor에 Props로 전달해주면 됩니다.
 
+## LogContext로 배열 상태 관리하기
+
+- WriteScreen 우측 상단의 체크 버튼을 누르면 현재 작성한 제목과 내용을 LogContext 안의 배열에 추가하는 기능을 구현
+- 기존에 LogContext에 만든 text 상태는 지우고, logs라는 배열을 useState로 상태 관리해주세요. 그다음에는 LogContext.Provider의 value에 이 logs 배열을 객체로 감싸서 넣어주세요. 
+- 객체로 감싸서 넣어주는 이유는 추후 logs 배열 외에도 상태에 변화를 주는 함수를 같이 넣어줄 것이기 때문입니다.
+
+> contexts/LogContext.js
+
+```jsx
+import React from 'react';
+import {createContext, useState} from 'react';
+
+const LogContext = createContext();
+export function LogContextProvider({children}) {
+  const [logs, setLogs] = useState([]);
+  return <LogContext.Provider value={{logs}}>{children}</LogContext.Provider>;
+}
+
+export default LogContext;
+```
+
+- 이제 제목과 내용을 받아와서 배열에 추가하는 onCreate라는 함수를 만들어볼 텐데, 배열에 항목을 추가할 때는 고유한 값이 있어야 합니다. 이전에 할일 목록을 만들 때는 배열 내 항목들의 id 최댓값을 사용했습니다. 이번에는 그렇게 구현하지 않고, 고유한 값을 생성해주는 uuid라는 라이브러리를 사용하겠습니다.
+- 다음 명령어를 입력해 uuid 라이브러리를 설치
+
+```
+yarn add uuid
+```
+
+- UUID는 범용 고유 식별자(universally uniqute identifier)로서, 표준으로 사용되는 고유 식별자 형식입니다.
+- UUID는 5가지 버전이 있는데, 일반적으로 랜덤하고 고유한 식별자를 생성할 때는 v4를 많이 사용합니다.
+- 사용법
+
+```javascript
+import {v4 as uuidv4} from 'uuid';
+uuidv4();
+```
+
+- 첫 번째 줄을 보면 v4 as uuidv4라고 작성했는데, uuid 라이브러리에서 내보낸 v4라는 값을 uuidv4라는 이름으로 사용하겠다는 의미입니다. 만약 as를 사용하지 않는다면 다음과 같이 사용하면 됩니다.
+
+
+```javascript
+import {v4} from 'uuid';
+v4();
+```
+
+- 이 라이브러리는 Node.js의 crypto 기능을 사용하는데, 리액트 네이티브에는 이 기능이 기본적으로 내장되어 있지 않습니다. 따라서 이 라이브러리가 정상적으로 작동할 수 있도록 react-native-get-random-values라는 라이브러리를 설치해 호환시켜야 합니다.
+
+```
+yarn add react-native-get-random-values
+npx pod-install
+```
+
+- 프로젝트 최상위 디렉터리에 있는 index.js 파일을 열어서 맨 위에 다음 코드를 추가하세요.
+
+> index.js
+
+```javascript
+import 'react-native-get-random-values';
+
+...
+```
+
+- yarn ios와 yarn android 명령어를 다시 입력해서 앱을 재시작하면 이제 uuid를 사용할 준비가 끝납니다. onCreate 함수를 구현해 value 객체에 포함해줍니다.
+
+> contexts/LogContext.js
+
+```jsx
+import React from 'react';
+import {createContext, useState} from 'react';
+import {v4 as uuidv4} from 'uuid';
+
+const LogContext = createContext();
+
+export function LogContextProvider({children}) {
+  const [logs, setLogs] = useState([]);
+  
+  const onCreate = ({title, body, date}) => {
+    const log = {
+      id: uuidv4(),
+      title,
+      body,
+      date,
+    };
+    setLogs([log, ...logs]);
+  };
+  
+  return (
+    <LogContext.Provider value={{logs, onCreate}}>
+      {children}
+    </LogContext.Provider>
+  );
+}
+
+export default LogContext;
+```
+
+- onCreate 함수에서는 title, body 외에 날짜 값을 위한 date도 받아옵니다. 이 함수에서 log라는 객체를 만들고 spread 연산자를 사용해 새로운 배열 상태를 설정해줬습니다. log가 ...log보다 먼저 사용됐죠? 이렇게 하면 새로 만든 객체가 맨 앞에 추가됩니다.
+
+## Log 작성 기능 마무리하기
+
+- 이제 Log 작성 기능을 마무리해봅시다. WriteScreen에서 useContext를 사용해 LogContext 값을 받아오고, onSave라는 함수를 만들겠습니다.
+- onSave 함수를 완성하고 WriteHeader에 Props로 넣어주어 체크 버튼을 누를 때 이 함수를 호출합니다.
+
+> screens/WriteScreen.js
+
+```jsx
+import {useNavigation} from '@react-navigation/native';
+import React, {useContext, useState} from 'react';
+import {KeyboardAvoidingView, Platform, StyleSheet} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import WriteEditor from '../components/WriteEditor';
+import WriteHeader from '../components/WriteHeader';
+import LogContext from '../contexts/LogContext';
+
+function WriteScreen() {
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const navigation = useNavigation();
+  
+  const {onCreate} = useContext(LogContext);
+  const onSave = () => {
+    onCreate({
+      title,
+      body,
+      // 날짜를 문자열로 변환 
+      date: new Date().toISOString(),
+    });
+    navigation.pop();
+  };
+  
+  return (
+    <SafeAreaView style={styles.block}>
+      <KeyboardAvoidingView
+        style={styles.avoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <WriteHeader onSave={onSave} />
+        <WriteEditor 
+          title={title}
+          body={body}
+          onChangeTitle={setTitle}
+          onChangeBody={setBody}
+        />
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+...
+```
+
+- onSave 함수에서는 onCreate를 호출하고, navigation.pop()을 사용해 이전 화면으로 되돌아가도록 구현해줬습니다.
+
+> components/WriteHeader.js
+
+```jsx
+function WriteHeader({onSave}) {
+  const navigation = useNavigation();
+  const onGoBack = () => {
+    navigation.pop();
+  };
+  
+  return (
+    <View style={styles.block}>
+      <View style={styles.iconButtonWrapper}>
+        <TransparentCircleButton 
+          onPress={onGoBack}
+          name="arrow-back"
+          color="#424242"
+        />
+      </View>
+      <View style={styles.buttons}>
+        <TransparentCircleButton 
+          name="delete-forever"
+          color="#ef5350"
+          hasMarginRight
+        />
+        <TransparentCircleButton 
+          name="check"
+          color="#009688"
+          onPress={onSave}
+        />
+      </View>
+    </View>
+  );
+}
+
+...
+```
+
+- WriteHeader에서는 체크 버튼을 보여주고 있는 TransparentCircleButton에 onPress Props로 onSave Props를 전달해줬습니다.
+- FeedsScreen에서 useContext를 사용해 LogContext의 값을 받아온 뒤, logs 배열을 콘솔에 출력해보세요.
+
+> screens/FeedsScreen.js
+
+```jsx
+import React, {useContext} from 'react';
+import {StyleSheet, View} from 'react-native';
+import FloatingWriteButton from '../components/FloatingWriteButton';
+import LogContext from '../contexts/LogContext';
+
+function FeedsScreen() {
+  const {logs} = useContext(LogContext);
+  console.log(JSON.stringify(logs, null, 2));
+  
+  ...
+}
+```
+
+- JSON.stringify()를 사용할 때 두 번째와 세 번째 파라미터를 이와 같이 설정해주면 객체나 배열을 출력할 때 공백과 새 줄을 포함해 보기 좋게 출력해줍니다.
+- 새 항목을 작성하고 터미널을 확인하면 다음과 같이 출력됩니다.
+
+```json
+[
+  {
+    "id": "2e9db794-e9e1-40a2-a8f8-5ba8100ee2fe",
+    "title": "Hello",
+    "body": "Hello World!",
+    "date": "2021-08-23T20:20:16.235Z"
+  }
+]
+```
+
+- 이렇게 객체에 네 가지 값이 모두 정상적으로 들어갔는지 확인하고. 잘 출력이 됐다면, console.log 코드는 제거
+
 ---
 # 글 목록 보여주기
 
