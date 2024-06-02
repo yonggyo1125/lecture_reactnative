@@ -1519,5 +1519,84 @@ function FeedsScreen() {
 ---
 # 글 목록 보여주기
 
+> 작성한 글 목록을 FeedsScreen에 보여주는 기능을 만들어보겠습니다.
+
+
+## FeedListItem 컴포넌트 만들기
+
+- 먼저 FeedListItem이라는 컴포넌트를 만듭니다. 이 컴포넌트는 log 객체를 Props로 받아와서 알맞은 위치에 정보를 보여줍니다. 
+- 글 목록에서 화면에 body를 보여줄 때는 전체 내용을 보여주지 않습니다. 우선 줄 바꿈 문자를 모두 없애야 하고, 길이가 100자 이상이면 뒤에 줄임표(…)를 붙여줘야 합니다. 이러한 작업을 하는 truncate라는 함수도 따로 선언해주겠습니다. 
+- 그리고 추후 이 항목을 선택하면 WriteScreen을 다시 띄워서 전체 내용을 볼 수 있게 해줘야 하기 때문에 Pressable 컴포넌트를 사용하겠습니다.
+
+> components/FeedListItem.js
+
+```jsx
+import React from 'react';
+import {Platform, Pressable, StyleSheet, Text} from 'react-native';
+
+function truncate(text) {
+  // 정규식을 사용해 모든 줄 바꿈 문자 제거
+  const replaced = text.replace(/\n/g, '');
+  if (replaced.length <= 100) {
+    return replaced;
+  }
+  return replaced.slice(0, 100).concat('...');
+}
+
+function FeedListItem({log}) {
+  const {title, body, date} = log; // 사용하기 편하게 객체 구조 분해 할당
+  
+  return (
+    <Pressable
+      style={({pressed}) => [
+        styles.block,
+        Platform.OS === 'ios' && pressed && {backgroundColor: '#efefef'},
+      ]}
+      android_ripple={{color: '#ededed'}}>
+      <Text style={styles.date}>{new Date(date).toLocaleString()}</Text>
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.body}>{truncate(body)}</Text>
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  block: {
+    backgroundColor: 'white',
+    paddingHorizontal: 16,
+    paddingVertical: 24,
+  },
+  date: {
+    fontSize: 12,
+    color: '#546e7a',
+    marginBottom: 8,
+  },
+  title: {
+    color: '#263238',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  body: {
+    color: '#37474f',
+    fontSize: 16,
+    lineHeight: 21,
+  }
+});
+
+export default FeedListItem;
+```
+
+## FeedList 컴포넌트 만들기
+
+- 이번에는 FeedList 컴포넌트를 만들어봅시다. 이 컴포넌트는 logs라는 Props를 받아와서 FlatList를 통해 여러 항목을 보여줍니다.
+- FeedsScreen에서 FlatList를 바로 사용하지 않고 FeedList 컴포넌트를 따로 만드는 이유는 추후 달력 화면에서도 이 컴포넌트를 재사용할 것이기 때문입니다.
+
+> components/FeedList.js 
+
+```jsx
+
+```
+
 ---
 # Animated로 애니메이션 적용하기 
