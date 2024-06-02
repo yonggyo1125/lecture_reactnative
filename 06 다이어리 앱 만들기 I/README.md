@@ -1592,11 +1592,71 @@ export default FeedListItem;
 - 이번에는 FeedList 컴포넌트를 만들어봅시다. 이 컴포넌트는 logs라는 Props를 받아와서 FlatList를 통해 여러 항목을 보여줍니다.
 - FeedsScreen에서 FlatList를 바로 사용하지 않고 FeedList 컴포넌트를 따로 만드는 이유는 추후 달력 화면에서도 이 컴포넌트를 재사용할 것이기 때문입니다.
 
-> components/FeedList.js 
+> components/FeedList.js
 
 ```jsx
+import React from 'react';
+import {FlatList, StyleSheet, View} from 'react-native';
+import FeedListItem from './FeedListItem';
 
+function FeedList({logs}) {
+  return (
+    <FlatList 
+      data={logs}
+      style={styles.block}
+      renderItem={({item}) => <FeedListItem log={item} />}
+      keyExtractor={(log) => log.id}
+      itemSeparatorComponent={() => <View style={styles.separator} />}
+    />
+  );
+  
+  const styles = StyleSheet.create({
+    block: {flex: 1},
+    separator: {
+      backgroundColor: '#e0e0e0',
+      height: 1,
+      width: '100%',
+    },
+  });
+}
+
+export default FeedList;
 ```
+
+- 컴포넌트를 다 만들었다면 FeedsScreen에 적용합니다.
+
+> screens/FeedsScreen.js
+
+```jsx
+import React, {useContext} from 'react';
+import {StyleSheet, View} from 'react-native';
+import FeedList from '../components/FeedList';
+import FloatingWriteButton from '../components/FloatingWriteButton';
+import LogContext from '../contexts/LogContext';
+
+function FeedsScreen() {
+  const {logs} = useContext(LogContext);
+  return (
+    <View style={styles.block}>
+      <FeedList logs={logs} />
+      <FloatingWriteButton />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  block: {
+    flex: 1,
+  },
+});
+
+export default FeedsScreen;
+```
+
+- 새 로그를 2~3개 정도 작성해서 화면에 잘 나타나는지 확인
+
+![image10](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/06%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/10.png)
+> FeedsScreen
 
 ---
 # Animated로 애니메이션 적용하기 
