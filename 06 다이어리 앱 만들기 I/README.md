@@ -1779,7 +1779,24 @@ function Sample() {
 <Animated.View style={{opacity: animation}}></Animated.View>
 ```
 
-- 즉, Animated. 뒤에 사용하고 싶은 리액트 네이티브 컴포넌트의 이름을 넣어주면 됩니다
+- 즉, Animated. 뒤에 사용하고 싶은 리액트 네이티브 컴포넌트의 이름을 넣어주면 됩니다(예: Animated.View, Animated.Text, Animated.Image...).
+- 이 예시 코드에서는 컴포넌트의 투명도 값을 animation이 가리키고 있는 값으로 설정했습니다. 추후 이 값을 변경할 때는 Animated.timing이라는 함수를 사용합니다.
 
+```jsx
+Animated.timing(animation, {
+  toValue: 0, // 어떤 값으로 변경할지 - 필수
+  duration: 1000, // 애니메이션에 걸리는 시간(밀리세컨드) - 기본값: 500
+  delay: 0, // 딜레이 이후 애니메이션 시작 - 기본값: 0
+  useNativeDriver: true, // 네이티브 드라이버 사용 여부 - 필수
+  isInteraction: true, // 사용자 인터렉션에 의해 시작된 애니메이션인지 지정 - 기본값 true 
+  // 애니메이션 속도 변경 함수 - 기본값: Easing.inOut(Easing.ease)
+  easing: Easing.inOut(Easing.ease),
+}).start(() => {
+  // 애니메이션 처리 완료 후 실행할 작업
+})
+```
 
+- 여기서 toValue, useNativeDriver 값은 필수로 지정해야 합니다. useNativeDriver는 애니메이션 처리 작업을 자바스크립트 엔진이 아닌 네이티브 레벨에서 진행하게 하는 옵션으로 transform, opacity처럼 레이아웃과 관련없는 스타일에만 적용할 수 있습니다. 
+- 예를 들어 레이아웃에 영향을 끼치는 left, width, paddingLeft, marginLeft와 같은 스타일에는 꼭 useNativeDriver를 false로 지정해야 합니다.
+- 애니메이션은 .start()로 시작하고, 이 함수에 콜백 함수를 인자로 넣어주면 애니메이션이 끝난 후 호출됩니다.
 
