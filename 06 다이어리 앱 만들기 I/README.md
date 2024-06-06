@@ -1800,3 +1800,285 @@ Animated.timing(animation, {
 - 예를 들어 레이아웃에 영향을 끼치는 left, width, paddingLeft, marginLeft와 같은 스타일에는 꼭 useNativeDriver를 false로 지정해야 합니다.
 - 애니메이션은 .start()로 시작하고, 이 함수에 콜백 함수를 인자로 넣어주면 애니메이션이 끝난 후 호출됩니다.
 
+## 서서히 나타나고, 서서히 사라지기
+- 컴포넌트가 서서히 나타나고, 사라지는 Fade In, Fade Out 효과 연습
+
+> screens/CalendarScreen.js
+
+```jsx
+import React, {useRef} from 'react';
+import {Animated, Button, StyleSheet, View} from 'react-native';
+
+function FadeInAndOut() {
+  const animation = useRef(new Animated.Value(1)).current;
+  
+  return (
+    <View>
+      <Animated.View 
+        style={[
+          styles.rectangle,
+          {
+            opacity: animation,
+          },
+        ]}
+      />
+      <Button 
+        title="fadeIn"
+        onPress={() => {
+          Animated.timing(animation, {
+            toValue: 1,
+            useNativeDriver: true,
+          }).start();
+        }}
+      />
+      <Button 
+        title="FadeOut"
+        onPress={() => {
+          Animated.timing(animation, {
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+        }}
+      />
+    </View>
+  );
+}
+
+function CalendarScreen() {
+  return (
+    <View style={styles.block}>
+      <FadeInAndOut />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  block: {},
+  rectangle: {width: 100, height: 100, backgroundColor: 'black'},
+});
+
+export default CalendarScreen;
+```
+
+![image13](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/06%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/13.png)
+> Fade In, Fade Out
+
+- 만약 상태 값에 따라 이 애니메이션을 적용하고 싶다면 useState와 useEffect를 활용하세요.
+- Boolean 타입의 값을 토글하는 버튼 하나로 Fade In/Fade Out하도록 구현해보겠습니다.
+
+> screens/CalendarScreen.js
+
+```jsx
+import React, {useRef, useState, useEffect} from 'react';
+import {Animated, Button, StyleSheet, View} from 'react-native';
+
+function FadeInAndOut() {
+  const animation = useRef(new Animated.Value(1)).current;
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => {
+    Animated.timing(animation, {
+      toValue: hidden ? 0:1,
+      useNativeDriver: true,
+    }).start();
+  }, [hidden, animation]);
+  
+  return (
+    <View>
+      <Animated.View 
+        style={[
+          styles.rectangle,
+          {
+            opacity: animation,
+          },
+        ]}
+      />
+      <Button 
+        title="Toggle"
+        onPress={() => {
+          setHidden(!hidden);
+        }}
+      />
+    </View>
+  );
+}
+
+... 
+
+```
+
+![image14](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/06%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/14.png)
+> 서서히 나타나고 서서히 사라지기
+
+### 좌우로 움직이기
+- 컴포넌트를 움직일 때는 꼭 필요한 상황이 아니라면 left, top 스타일보다는 transform 스타일을 사용하는 것이 성능면에서 더 좋습니다.
+- 예를 들어 우측으로 100, 아래로 50 움직이고 싶다면 다음과 같이 스타일을 적용하면 됩니다.
+- 기존에 있던 위치에서 위로 움직이거나 좌측으로 움직이고 싶다면 음수를 설정합니다.
+
+```jsx
+{
+  transform: [{translateX: 100, {translateY: 50}]
+}
+```
+
+- CalendarScreen에서 기존에 만든 FadeInAndOut 컴포넌트를 지우고, 다음과 같이 SlideLeftAndRight 컴포넌트를 만들어보세요.
+
+> screens/CalendarScreen.js 
+
+```jsx
+import React, {useRef, useState, useEffect} from 'react';
+import {Animated, Button, StyleSheet, View} from 'react-native';
+
+function SlideLeftAndRight() {
+  const animation = useRef(new Animated.Value(0)).current;
+  const [enabled, setEnabled] = useState(false);
+  
+  useEffect(() => {
+    Animated.timing(animation, {
+      toValue: enabled ? 150:0,
+      useNativeDriver: true
+    }).start();
+  }, [enabled, animated]);
+  
+  return (
+    <View>
+      <Animated.View 
+        style={[
+          styles.rectangle,
+          {
+            transform: [{translateX: animation}],
+          }
+        ]}
+      />
+      <Button
+        title="Toggle"
+        onPress={() => {
+          setEnabled(!enabled);
+        }}
+      />
+    </View>
+  );
+}
+
+function CalendarScreen() {
+  return (
+    <View style={styles.block}>
+      <SlideLeftAndRight />
+    </View>
+  );
+}
+
+...
+
+```
+
+![image15](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/06%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/15.png)
+> 좌우로 움직이기
+
+### interpolate로 여러 스타일 적용하기
+- 버튼을 누르면 검은색 박스가 우측으로 움직이면서 서서히 사라지는 효과를 내고 싶다면  interpolate라는 함수를 사용합니다.
+- 이 함수를 사용하면 Value가 지니고 있는 값을 기준으로 새로운 값을 생성할 수 있습니다.
+- interpolate 함수는 다음과 같이 사용합니다
+
+```jsx
+animation.interpolate({
+  inputRange: [0, 1],
+  outputRange: [0, 150],
+})
+```
+
+- Value가 지닐 값의 입력 범위와 출력 범위를 지정하면 이에 따라 새로운 값이 생성됩니다. 
+- 이와 같이 설정하면 Value가 지닌 값이 0일 때는 0, 1일 때는 150으로 지정됩니다.
+- CalendarScreen을 다음과 같이 수정해보세요.
+
+> screens/CalendarScreen.js
+
+```jsx
+import React, {useRef, useState, useEffect} from 'react';
+import {Animated, Button, StyleSheet, View} from 'react-native';
+
+function SlideLeftAndRight() {
+  const animation = useRef(new Animated.Value(0)).current;
+  const [enabled, setEnabled] = useState(false);
+  
+  useEffect(() => {
+    Animated.timing(animation, {
+      toValue: enabled ? 1:0,
+      useNativeDriver: true,
+    }).start();
+  }, [enabled, animation]);
+  
+  return (
+    <View>
+      <Animated.View 
+        style={[
+          styles.rectangle,
+          {
+            transform: [
+              {
+                translateX: animation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 150],
+                }),
+              },
+            ],
+            opacity: animation.interpolate({
+               inputRange: [0, 1],
+               outputRange: [1, 0],
+            }),
+          }
+        ]}
+      />
+      <Button 
+        title="Toggle"
+        onPress={() => {
+          setEnabled(!enabled);
+        }}
+      />
+    </View>
+  );
+}
+
+...
+
+```
+
+- enabled 값이 true일 때 Value 값을 1로 변경하고, interpolate 함수를 통해 transform과 opacity 값을 알맞게 설정해줬습니다. opacity의 경우 현재 Value 값이 0일 때는 1, 1일 때는 0으로 지정됩니다.
+
+![image16](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/06%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/16.png)
+> 우측으로 움직이며 서서히 사라지기
+
+## 스크롤을 내렸을때 글쓰기 버튼 숨기기
+
+- 기능을 개발하고 테스트할 때마다 매번 항목을 여러 개 추가하기는 번거로우니, LogContext에서 logs 기본값을 잠깐 변경해줍니다.
+
+> contexts/LogContext.js - logs
+
+```javascript
+const [logs, setLogs] = useState(
+  Array.from({length: 10})
+    .map((_, index) => ({
+      id: uuidv4(),
+      title: `log ${index}`,
+      body: `log ${index}`,
+      date: new Date().toISOString(),
+    }))
+    .reverse(),
+);
+```
+
+- Array.from 함수를 사용해 길이가 10인 배열을 생성한 뒤 map 함수를 통해 객체 배열로 변환해줬습니다. 복사/붙여넣기를 하는 것보다 이렇게 하는 게 훨씬 간결합니다.
+- 스크롤을 내렸을 때 글쓰기 버튼을 숨기기 위해서는 일단 스크롤이 FlatList 컴포넌트의 바닥에 가까워졌는지 감지할 수 있어야 합니다. FlatList에서 바닥에 닿았을 때 어떤 작업이 하고 싶다면 onEndReached 함수와 onEndReachedThreshold 값을 설정하면 됩니다.
+
+```jsx
+<FlatList 
+  ...
+  onEndReached={(distanceFormEnd) => {
+    console.log('바닥과 가까워졌어요!');
+  }}
+  onEndReachedThreshold={0.85}
+>
+```
+
+- 이렇게 하면 콘텐츠의 85%까지 스크롤했을 때 onEndReached 함수가 호출됩니다. 스크롤로 더 많은 정보를 불러오는 무한스크롤링을 구현할 때 이 Props를 사용하면 유용한데, 현재 상황에는 사용하지 못합니다. 스크롤이 바닥에서 가까워지면 글쓰기 버튼을 숨기고, 멀어지면 글쓰기 버튼을 다시 보여줘야 하는데 이 방식은 멀어졌을 때를 구분하지 못하기 때문입니다.
+- onEndReached를 사용하는 대신 onScroll 이벤트를 사용할 것입니다. onScroll 이벤트를 사용하면 콘텐츠의 전체 크기와 스크롤의 위치를 알아낼 수 있습니다. onScroll Props는 ScrollView의 onScroll과 동일합니다. 
+- FeedList에서 onScroll 함수를 다음과 같이 구현해보세요. 
