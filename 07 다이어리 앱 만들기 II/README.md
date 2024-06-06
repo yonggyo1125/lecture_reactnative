@@ -320,3 +320,223 @@ function WriteHeader({onSave, onAskRemove, isEditing}) {
 
 ```
 
+![image1](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/07%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/1.png)
+> 항목 삭제 Alert
+
+
+# 검색 기능 구현하기
+
+- 검색을 하려면 화면의 헤더 부분에 텍스트를 입력할 수 있어야 하므로, 헤더를 커스터마이징해야 합니다.
+
+## SearchHeader 컴포넌트 만들기
+
+- MainTab 컴포넌트에서 현재 화면에 따라 다른 헤더 제목을 설정하기 위해 getHeaderTitle이라는 함수를 만들었습니다.
+- 네이티브 스택 내비게이터의 headerTitle 옵션에는 문자열이 아닌 JSX를 넣어줄 수도 있습니다. 우선 SearchHeader라는 컴포넌트를 만듭니다.
+
+> components/SearchHeader.js
+
+```jsx
+import React from 'react';
+import {StyleSheet, Text} from 'react-native';
+
+function SearchHeader() {
+  return <Text style={styles.block}>Hello</Text>;
+}
+
+const styles = StyleSheet.create({
+  block: {
+    color: 'white',
+    backgroundColor: 'blue',
+  }
+});
+
+export default SearchHeader;
+```
+
+- 임시로 배경이 파란색인 Text를 보여주도록 했습니다. 이제 이 컴포넌트를 검색 화면일 때 headerTitle로 지정해보겠습니다. MainTab을 열어서 검색 화면의 설정을 같이 수정하세요.
+
+> screens/MainTab.js
+
+```jsx
+...
+
+import SearchHeader from '../components/SearchHeader'
+
+... 
+
+    <Tab.Screen 
+      name="Search"
+      component={SearchScreen}
+      options=[{
+        title: '검색',
+        tabBarIcon: ({color, size}) => (
+          <Icon name="search" size={size} color={color} />
+        ),
+        headerTitle: () => <SearchHeader />,
+      }]
+    />
+  </Tab.Navigator>
+  );
+}
+
+export default MainTab;
+```
+
+- 검색 화면을 띄웠을 때 헤더가 다음과 같이 나타날 것입니다
+
+![image2](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/07%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/2.png)
+> 커스텀 헤더
+
+- iOS는 컴포넌트가 중앙에 정렬되고, 안드로이드는 좌측에 정렬됩니다. 타이틀이 헤더의 일부 영역만 사용하지 않고 전체 영역을 사용하도록 만들고 싶습니다. 그렇게 하려면 화면 크기를 가져온 다음에 해당 값을 참고해 dp 단위의 크기를 직접 설정해줘야 합니다.
+
+## 화면 크기 조회하기
+- 화면 크기를 dp 단위로 가져오는 방법은 두 가지입니다.
+- 첫 번째 방법은 Dimensions.get을 사용하는 것입니다.
+
+```jsx
+import {Dimensions} from 'react-native';
+
+const { width, height } = Dimensions.get('window');
+```
+
+- Dimensions.get에는 두 가지 문자열을 넣을 수 있습니다. 
+  - 'window'를 사용하면 현재 앱에서 사용할 수 있는 영역의 크기를 가져옵니다. 
+  - 'screen'을 사용하면 전체 화면의 크기를 가져옵니다.
+- iOS에서는 두 크기의 차이가 없지만, 안드로이드에서는 차이가 있습니다. 안드로이드에서 'window'로 크기를 조회했을 때는 상단의 상태 바와 하단의 소프트 메뉴 바 영역을 제외한 크기를 반환합니다.
+- 이 방법은 컴포넌트 외부에서도 작동하므로 StyleSheet에서도 사용할 수 있습니다. 화면의 방향을 바꾸거나, 폴더블 디바이스를 사용하면 이 크기가 바뀔 수도 있습니다. 이러한 경우에는 Dimensions.addEventListener와 Dimensions.removeEventListener를 사용해 크기가 바뀌는 이벤트에 대비해야 합니다.
+
+```jsx
+import React, {useState, useEffect} from 'react';
+import {View, Dimension} from 'react-native';
+
+function MyComponent() {
+  const [dimension, setDimension] = useState(Dimensions.get('window'));
+  useEffect(() => {
+    const eventListener = ({window, screen}) => {
+      setDimension(window);
+    }
+    Dimensions.addEventListener('change', eventListener);
+    return () => {
+      Dimensions.removeEventListener('change', eventListener);
+    }
+  }, []);
+  
+  ... 
+  
+}
+```
+
+- 두 번째 방법은 useWindowDimensions Hook을 사용하는 것입니다. 
+- Dimensions.get과 달리 화면 크기가 바뀌는 상황에 우리가 직접 대비할 필요가 없습니다. Hook 형태로 사용하기 때문에 값이 바뀌면 컴포넌트에서 자동으로 반영됩니다.
+
+```jsx
+import React from 'react';
+import {useWindowDimensions} from 'react-native';
+
+function MyComponent() {
+  const {width, height} = useWindowDimensions();
+}
+```
+
+- 이 방법은 함수 컴포넌트 내부에서만 사용 가능하며, 전체 화면의 크기를 가져오는 기능은 없습니다. 만약 전체 화면의 크기를 가져와야 한다면 Dimensions.get('screen')을 사용해야 합니다.
+- 두 번째 방법이 작성해야 할 코드가 더 적어서 간단하므로, 여기서는 이 방법을 사용하겠습니다. SearchHeader 컴포넌트에 useWindowDimensions로 너비를 직접 계산해 설정해봅시다.
+
+> components/SearchHeader.js
+
+```jsx
+import React from 'react';
+import {StyleSheet, useWindowDimensions, View} from 'react-native';
+
+function SearchHeader() {
+  const {width} = useWindowDimensions();
+  return <View style={[styles.block, {width: width - 32, height: 24}]} />;
+}
+
+const styles = StyleSheet.create({
+  block: {
+    backgroundColor: 'blue',
+  },
+});
+
+export default SearchHeader;
+```
+
+- Text 대신 View를 사용하고 높이는 24, 너비는 전체 너비에 32를 뺀 값을 설정해줬습니다. 32를 뺀 이유는 양 옆에 여백이 16씩 있기 때문입니다.
+
+![image3](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/07%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/3.png)
+> SearchHeader 너비 직접 계산
+
+## SearchHeader 컴포넌트 UI 구성하기 
+- 이 컴포넌트에서는 검색어를 입력할 TextInput과 검색어를 초기화하는 버튼을 보여줘야 합니다.
+
+> components/SearchHeader.js
+
+```jsx
+import React from 'react';
+import {
+  Pressable, 
+  StyleSheet,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+function SearchHeader() {
+  const {width} = useWindowDimensions();
+  return (
+    <View style={[styles.block, {width: width - 32}]}>
+      <TextInput style={styles.input} placeholder="검색어를 입력하세요." autoFocus />
+      <Pressable
+        style={({pressed}) => [styles.button, pressed && {opacity: 0.5}]}>
+        <Icon name="cancel" size={20} color="#9e9e9e" />
+      </Pressable>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  block: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  input: {
+    flex: 1,
+  },
+  button: {
+    marginLeft: 8,
+  },
+});
+
+export default SearchHeader;
+```
+
+![image4](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/07%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/4.png)
+> SearchHeader 컴포넌트 UI 구성하기
+
+- TextInput에 autoFocus라는 Props를 사용해줬는데, 이러면 이 컴포넌트가 화면에 나타날 때 자동으로 포커스가 잡힙니다. 그럼 검색 화면을 열자마자 바로 키보드가 떠서 검색어를 입력할 수 있습니다.
+- 컴포넌트의 UI를 다 구성했으니 이제 검색어에 대한 상태를 관리해줘야 합니다. SearchHeader에서 입력한 검색어를 SearchScreen에서 사용할 수 있어야 하는데, 현재 SearchHeader 컴포넌트는 MainTab 쪽에서 사용하고 있기 때문에, 상태를 공유하려면 이번에도 Context를 사용해야 합니다.
+
+## SearchContext 만들기 
+
+- 검색어 상태를 관리하기 위해 SearchContext를 만듭니다.
+
+> contexts/SearchContext.js
+
+```jsx
+import React, {createContext, useState} from 'react';
+import SearchContext = createContext();
+
+export function SearchContextProvider({children}) {
+  const [keyword, onChangeText] = useState('');
+  return (
+    <SearchContext.Provider value={{keyword, onChangeText}}>
+      {children}
+    </SearchContext.Provider>
+  );
+}
+
+export default SearchContext;
+```
+
+- 이번 Context는 별도로 만들어야 할 함수가 없습니다. useState로 만든 상태 값인 keyword와 업데이터 함수인 onChangeText를 SearchContext.Provider의 value로 설정하면 됩니다. Context를 다 만든 다음 App 컴포넌트를 열어 SearchContextProvider 컴포넌트를 불러와 사용해주세요.
