@@ -2288,3 +2288,61 @@ function FloatingWriteButton({hidden}) {
 > 스크롤 내렸을 때 버튼 숨기기 
 
 ## spring 사용하기
+
+- 기존에는 timing 함수로 애니메이션 효과를 적용했는데, 이외에도 spring이라는 함수가 있습니다. 
+- timing과 비슷한데 값이 단순히 toValue로 지정한 값으로 서서히 변하는 것이 아니라, 마치 스프링처럼 통통 튀는 효과가 나타납니다. 예를 들어 0에서 1로 설정한다면 다음과 같이 수치가 변경됩니다.
+
+```
+0 → 1.2 → 0.9 → 1.1 → 1
+```
+
+- 목푯값에 도달했을 때 멈추는 것이 아니라 스프링이 눌렸다가 다시 펴질 때처럼 목푯값 근처에서 왔다갔다(oscillate) 합니다.
+- FloatingWriteButton을 다음과 같이 수정해보세요.
+
+> components/FloatingWriteButton.js - useEffect
+
+```jsx
+useEffect(() => {
+  Animated.spring(animation, {
+    toValue: hidden ? 1:0,
+    useNativeDriver: true,
+    tension: 45,
+    friction: 5,
+  }).start();
+}, [animation, hidden]);
+```
+
+- spring 함수에서는 다음과 같은 옵션을 설정해줄 수 있습니다.
+  - tension: 강도(기본값: 40)
+  - friction: 감속(기본값: 7)
+  - speed: 속도(기본값: 12)
+  - bounciness: 탄력성(기본값: 8)
+
+- 이 옵션을 사용할 때 tension/friction을 같이 사용하거나 speed/bounciness를 같이 사용할 수 있지만 다른 조합으로는 사용하지 못합니다. 
+- 이 옵션 외에도 다른 옵션들이 있으니 자세한 내용은 다음 링크를 참조 [https://reactnative.dev/docs/animated#spring](https://reactnative.dev/docs/animated#spring)
+- spring을 사용할 때는 이 옵션들을 조정하면서 원하는 스프링 효과를 구현하면 됩니다.
+
+## 예외 처리하기
+- 이번에 구현한 버튼 숨기기 기능에 예외 처리를 해야 할 상황이 두 가지 있습니다.
+- 첫 번째, 항목 개수가 적어서 스크롤이 필요 없는 상황입니다. 안드로이드에서는 스크롤 없이 모든 항목을 보여줄 수 있는 상황에서는 아예 스크롤이 방지되어 상관없지만, iOS에서는 스크롤이 필요 없는 상황에서도 화면을 세로 방향으로 스와이프하면 FlatList 내부의 내용이 움직이면서 onScroll 함수가 호출됩니다. 따라서 contentSize.height > layoutMeasurement.height 조건을 만족할 때만 버튼을 숨기도록 로직을 수정해야 합니다.
+- 두 번째, onScrolledToBottom Props가 설정되지 않았을 때입니다. 추후 캘린더 화면과 검색 화면에서도 이 컴포넌트를 재사용할 텐데 해당 화면에서는 FloatingWriteButton을 보여주지 않기 때문에 버튼을 숨기는 로직이 필요하지 않습니다. 따라서 함수가 없으면 아무것도 하지 않도록 수정해야 합니다.
+- onScroll 함수를 다음과 같이 수정해주세요.
+
+> components/FeedList.js - onScroll
+
+```jsx
+const onScroll = (e) => {
+  if (!onScrolledToBottom) {
+    return;
+  }
+  
+  const {contentSize, layoutMeasurement, contentOffset} = e.nativeEvent;
+  const distanceFromBottom = contentSize.height - layoutMeasurement.height - contentOffset.y;
+  
+  if (contentSize.height > layoutMeasurement.height && distanceFromBottom < 72) {
+    onScrolledToBottom(true);
+  } else {
+    onScrolledToBottom(false);
+  }
+};
+```
