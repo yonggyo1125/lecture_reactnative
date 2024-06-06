@@ -2081,4 +2081,210 @@ const [logs, setLogs] = useState(
 
 - 이렇게 하면 콘텐츠의 85%까지 스크롤했을 때 onEndReached 함수가 호출됩니다. 스크롤로 더 많은 정보를 불러오는 무한스크롤링을 구현할 때 이 Props를 사용하면 유용한데, 현재 상황에는 사용하지 못합니다. 스크롤이 바닥에서 가까워지면 글쓰기 버튼을 숨기고, 멀어지면 글쓰기 버튼을 다시 보여줘야 하는데 이 방식은 멀어졌을 때를 구분하지 못하기 때문입니다.
 - onEndReached를 사용하는 대신 onScroll 이벤트를 사용할 것입니다. onScroll 이벤트를 사용하면 콘텐츠의 전체 크기와 스크롤의 위치를 알아낼 수 있습니다. onScroll Props는 ScrollView의 onScroll과 동일합니다. 
-- FeedList에서 onScroll 함수를 다음과 같이 구현해보세요. 
+- FeedList에서 onScroll 함수를 다음과 같이 구현해보세요.
+
+> components/FeedList.js
+
+```jsx
+import React from 'react';
+import {FlatList, StyleSheet, View} from 'react-native';
+import FeedListItem from './FeedListItem';
+
+function FeedList({logs}) {
+  const onScroll = (e) => {
+    const {contentSize, layoutMeasurement, contentOffset) = e.nativeEvent;
+    console.log({contentSize, layoutMeasurement, contentOffset});
+  };
+  
+  return (
+    <FlatList 
+      data={logs}
+      style={styles.block}
+      renderItem={({item}) => <FeedListItem log={item} />}
+      keyExtractor={(log) => log.id}
+      itemSeperatorComponent={() => <View style={styles.separator} />}
+      onScroll={onScroll}
+    />
+  );
+}
+
+...
+
+```
+
+- 스크롤을 맨 아래까지 내렸을 때 터미널에 출력되는 결과물은 다음과 같습니다.
+
+```json
+{
+  "contentSize": {
+    "height": 1273.90478515625,
+    "width": 411.4285583496094
+  },
+  "layoutMeasurement": {
+    "height": 554.2857055664062,
+    "width": 411.4285583496094
+  },
+  "contentOffset": {
+    "y": 719.6190185546875,
+    "x": 0
+  }
+}
+```
+
+- contentSize.height는 FlatList 내부의 전체 크기를 나타냅니다. layoutMeasurement.height는 화면에 나타난 FlatList의 실제 크기를 나타냅니다.
+- 현재 프로젝트의 경우 화면의 상단과 하단 영역을 제외한 크기
+- contentOffset.y는 스크롤할 때마다 늘어나는 값, 스크롤이 맨 위에 있을 때는 0이고, 스크롤이 맨 아래에 있을 때는 contentSize.height - layoutMeasurement.height를 계산한 값입니다
+- contentSize.height - layoutMeasurement.height - contentOffset.y를 계산한 값이 0에 가까워진다면 FlatList의 스크롤이 바닥에 가까워지는 것
+- 이 원리를 사용해 스크롤이 바닥에 가까워졌는지 감지하는 기능을 구현
+
+> components/FeedList.js - onScroll
+
+```jsx
+const onScroll = (e) => {
+  const {contentSize, layoutMesurement, contentOffset} = e.nativeEvent;
+  const distanceFromBottom = contentSize.height - layoutMeasurement.height - contentOffset.y;
+  
+  if (distanceFromBottom < 72) {
+    console.log('바닥과 가까워요.');
+  } else {
+    console.log('바닥에서 멀어졌어요');
+  }
+};
+```
+
+- 이렇게 함수를 수정한 뒤 스크롤을 바닥까지 내렸을 때 터미널에 ‘바닥과 가까워요.’라는 문구가 출력되는지, 멀어졌을 때는 ‘바닥과 멀어졌어요.’라는 문구가 출력되는지 확인해보세요. 출력이 잘 됐다면 이를 통해 상태를 관리
+- FeedsScreen에서 hidden이라는 Boolean 타입의 상태를 만드세요. 그리고 onScrolledToBottom이라는 함수를 만들어서 파라미터로 받은 값과 상태 값이 다를 때 상태를 업데이트하도록 구현해주세요.
+
+> screens/FeedsScreen.js
+
+```jsx
+import React, {useContext, useState} from 'react';
+import {StyleSheet, View} from 'react-native';
+import FeedList from '../components/FeedList';
+import FloatingWriteButton from '../components/FloatingWriteButton';
+import LogContext from '../contexts/LogContext';
+
+function FeedScreen() {
+  const {logs} = useContext(LogContext);
+  const [hidden, setHidden] = useState(false);
+  const onScrolledToBottom = (isBottom) => {
+    if (hidden !== isBottom) {
+      setHidden(isBottom);
+    }
+  };
+  
+  return (
+    <View style={styles.block}>
+      <FeedList logs={logs} onScrolledToBottom={onScrolledToBottom} />
+      <FloatingWriteButton />
+    </View>
+  );
+}
+
+...
+
+```
+
+- 다음으로 FeedList 컴포넌트를 다음과 같이 수정해주세요.
+
+> components/FeedList.js
+
+```jsx
+import React from 'react';
+import {FlatList, StyleSheet, View} from 'react-native';
+import FeedListItem from ;./FeedListItem';
+
+function FeedList({logs, onScrolledToBottom}) {
+  const onScroll = (e) => {
+    const {contentSize, layoutMeasurement, contentOffset} = e.nativeEvent;
+    const distanceFromBottom = contentSize.height - layoutMeasurement.height - contentOffset.y;
+    
+    if (distanceFromBottom < 72) {
+      onScrolledToBottom(true);
+    } else {
+      onScrolledToBottom(false);
+    }
+  };
+}
+
+...
+
+```
+
+- 이렇게 하면 스크롤 위치에 따라 hidden 값이 변경될 것입니다. 이제 hidden 값을 Floating WriteButton 컴포넌트에 Props로 전달하고, 애니메이션 효과를 구현해주면 됩니다.
+
+> screens/FeedScreen.js - FloatingWriteButton
+
+```jsx
+<FloatingWriteButton hidden={hidden} />
+```
+
+> components/FloatingWriteButton.js
+
+```jsx
+import {useNavigation} from '@react-navigation/native';
+import React, {useEffect, useRef} from 'react';
+import {Platform, Pressable, StyleSheet, Animated} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+function FloatingWriteButton({hidden}) {
+  const navigation = useNavigation();
+  
+  const onPress = () => {
+    navigation.navigate('Write');
+  }; 
+  
+  const animation = useRef(new Animated.Value(0)).current;
+  
+  useEffect(() => {
+    Animated.timing(animation, {
+      toValue: hidden ? 1 : 0,
+      useNativeDriver: true,
+    }).start();
+  }, [animation, hidden]);
+  
+  return (
+    <Animated.View 
+      style={[
+        styles.wrapper,
+        {
+          transform: [
+            {
+              translateY: animation.interpolate({
+                inputRange: [0,1],
+                outputRange: [0,88],
+              }),
+            }
+          ],
+          opacity: animation.interpolate({
+            inputRange: [0,1],
+            outputRange: [1,0],
+          }),
+      }
+    ]}>
+     <Pressable
+      style={({pressed}) => [
+        styles.button,
+        Platform.OS === 'ios' && {
+          opacity: pressed ? 0.6 : 1,
+        },
+      ]}
+      android_ripple={{color: 'white'}}
+      onPress={onPress}>
+      <Icon name="add" size={24} style={styles.icon} />
+     </Pressable>
+     
+    </Animated.View>
+  );
+}
+
+... 
+
+```
+
+- hidden 값이 true일 때 컴포넌트를 아래로 이동시키고 투명도를 낮추는 효과를 적용했습니다. 스크롤을 맨 아래로 내렸을 때 버튼이 사라지는지 확인해보세요.
+
+![image17](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/06%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/17.png)
+> 스크롤 내렸을 때 버튼 숨기기 
+
+## spring 사용하기
