@@ -539,4 +539,605 @@ export function SearchContextProvider({children}) {
 export default SearchContext;
 ```
 
-- 이번 Context는 별도로 만들어야 할 함수가 없습니다. useState로 만든 상태 값인 keyword와 업데이터 함수인 onChangeText를 SearchContext.Provider의 value로 설정하면 됩니다. Context를 다 만든 다음 App 컴포넌트를 열어 SearchContextProvider 컴포넌트를 불러와 사용해주세요.
+- 이번 Context는 별도로 만들어야 할 함수가 없습니다. useState로 만든 상태 값인 keyword와 업데이터 함수인 onChangeText를 SearchContext.Provider의 value로 설정하면 됩니다. 
+- Context를 다 만든 다음 App 컴포넌트를 열어 SearchContextProvider 컴포넌트를 불러와 사용해주세요.
+- SearchContext와 기존에 만든 LogContext는 의존 관계가 아니기 때문에 Provider 컴포넌트의 사용 순서는 중요하지 않습니다.
+
+> App.js
+
+```jsx
+import React from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import RootStack from './screens/RootStack';
+import {LogContextProvider} from './contexts/LogContext';
+import {SearchContextProvider} from './contexts/SearchContext';
+
+function App() {
+  return (
+    <NavigationContainer>
+      <SearchContextProvider>
+        <LogContextProvider>
+          <RootStack />
+        </LogContextProvider>
+      </SearchContextProvider>
+    </NavigationContainer>
+  );
+}
+
+export default App;
+```
+
+- SearchContext를 적용한 후 SearchHeader와 SearchScreen에서 useContext로 해당 Context를 사용합니다.
+- SearchHeader에는 TextInput에 value와 onChangeText Props를 설정하세요. 그리고 우측의 Pressable을 눌렀을 때 텍스트를 초기화하도록 구현하세요.
+
+> components/SearchHeader.js
+
+```jsx
+import React, {useContext} from 'react';
+import {
+  Pressable,
+  StyleSheet,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import SearchContext from '../contexts/SearchContext';
+
+function SearchHeader() {
+  const {width} = useWindowDimensions();
+  const {keyword, onChangeText} = useContext(SearchContext);
+  
+  return (
+    <View style={[styles.block, {width: width - 32}]}>
+      <TextInput 
+        style={styles.input}
+        placeholder="검색어를 입력하세여"
+        value={keyword}
+        onChangeText={onChangeText}
+        autoFocus
+      />
+      <Pressable
+        style={({pressed}) => [styles.button, pressed && {opacity: 0.5}]}
+        onPress={() => onChangeText('')}>
+        <Icon name="cancel" size={20} color="#9e9e9e" />
+      </Pressable>
+    </View>
+  );
+}
+
+...
+
+```
+
+- SearchScreen에는 임시로 Text를 사용해 검색어를 화면에 보여주도록 설정합시다. SearchContext가 잘 작동하고 있는지 검증하기 위함
+
+> screens/SearchScreen.js
+
+```jsx
+import React, {useContext} from 'react';
+import {StyleSheet, Text, View} from 'react-native';
+import SearchContext from '../contexts/SearchContext';
+
+function SearchScreen({navigation}) {
+  const {keyword} = useContext(SearchContext);
+  return (
+    <View style={styles.block}>
+      <Text>{keyword}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  block: {},
+});
+
+export default SearchScreen;
+```
+
+- 이제 SearchKeyword에 검색어를 입력해보세요. 입력한 검색어가 SearchScreen에도 그대로 잘 나타나는지 확인
+
+![image5](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/07%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/5.png)
+> SearchContext 사용하기 
+
+## 검색어 필터링 후 FeedList 재사용하기
+
+- 배열의 내장 함수 filter 함수를 통해 구현하면 됩니다. 검색어를 사용해 배열의 데이터를 필터링한 다음, 그 결과물을 FeedList 컴포넌트를 재사용해 화면에 띄워봅시다.
+> screens/SearchScreen.js
+
+```jsx
+import React, {useContext} from 'react';
+import {StyleSheet, View} from 'react-native';
+import FeedList from '../components/FeedLists';
+import LogContext from '../contexts/LogContext';
+import SearchContext from '../contexts/SearchContext';
+
+function SearchScreen({navigation}) {
+  const {keyword} = useContext(SearchContext};
+  const {logs} = useContext(LogContext);
+  
+  const filtered = keyword === '' ? [] : logs.filter((log) => [log.title, log.body].some((text) => text.includes(keyword)));
+  
+  return (
+    <View style={styles.block}>
+      <FeedList logs={filtered} />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  block: {
+    flex: 1,
+  },
+});
+
+export default SearchScreen;
+```
+
+- 이 코드에서 text.includes라는 문자열 내장 함수를 사용했습니다. 이는 텍스트에 특정 문자열이 존재하는지 확인하는 함수입니다. 만약 존재한다면 true를 반환하고 그렇지 않으면 false를 반환합니다.
+- 그리고 \[log.title, log.body\] 배열에서 사용한 some이라는 배열 내장 함수는 배열 원소 중 특정 조건이 true인 원소가 하나라도 있으면 true를 반환하고, 모든 원소가 특정 조건을 만족하지 않을 때 false를 반환합니다.
+- 검색어가 있을 때는 필터링을 거치고, 그렇지 않을 때는 빈 배열을 보여주도록 설정했습니다.
+
+![image6](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/07%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/6.png)
+> 검색 기능 구현 
+
+## EmptySearchResult 만들기
+- 이제 검색 기능은 거의 다 구현했습니다. 검색 결과가 없을 때 안내 문구를 보여주는 컴포넌트를 만들고 이 기능을 마무리합시다.
+- 검색 결과가 없는 상황은 두 가지입니다. 첫 번째는 사용자가 검색어를 입력하지 않았을 때이고, 두 번째는 검색어와 일치하는 결과물이 없을 때입니다. 이 두 상황에 맞는 문구를 준비해 상황에 따라 알맞은 문구를 보여주는 컴포넌트 EmptySearchResult를 만들어봅시다.
+
+> components/EmptySearchResult.js
+
+```jsx
+import React from 'react';
+import {View, Text, StyleSheet} from 'react-native';
+
+const messages = {
+  NOT_FOUND: '검색 결과가 없습니다.',
+  EMPTY_KEYWORD: '검색어를 입력하세요.',
+};
+
+function EmptySearchResult({type}) {
+  return (
+    <View style={styles.block}>
+      <Text style={styles.text}>{messages[type]}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  block: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  text: {
+    color: '#9e9e9e',
+    fontSize: 16,
+  },
+});
+
+export default EmptySearchResult;
+```
+
+- 이 컴포넌트는 type이라는 Props를 받아옵니다. 이 값이 NOT_FOUND일 때는 검색 결과가 없다는 문구를 띄우고, EMPTY_KEYWORD일 때는 검색어를 입력하라는 문구를 띄웁니다.
+- 이제 이 컴포넌트를 SearchScreen에서 사용해줍니다.
+
+> screens/SearchScreen.js
+
+```jsx
+import React, {useContext} from 'react';
+import {StyleSheet, View} from 'react-native';
+import EmptySearchResult from '../components/EmptySearchResult';
+import FeedList from '../components/FeedList';
+import LogContext from '../contexts/LogContext';
+import SearchContext from '../contexts/SearchContext';
+
+function SearchScreen({navigation}) {
+  const {keyword} = useContext(SearchContext);
+  const {logs} = useContext(LogContext);
+  
+  const filtered = keyword === '' ? [] : logs.filter((log) => [log.title, log.body].some((text) => text.includes(keyword)));
+  
+  if (keyword === '') {
+    return <EmptySearchResult type="EMPTY_KEYWORD" />;
+  }
+  
+  if (filtered.length === 0) {
+    return <EmptySearchResult type="NOT_FOUND" />;
+  }
+  
+  return (
+    <View style={styles.block}>
+      <FeedList logs={filtered} />
+    </View>
+  );
+} 
+
+const styles = StyleSheet.create({
+  block: {
+    flex: 1,
+  },
+});
+
+export default ScreenSearch;
+```
+
+![image7](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/07%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/7.png)
+> EmptySearchResult 만들기
+
+
+## 달력 기능 구현하기
+
+- 달력 화면을 만드는 과정에서 react-native-calendars라는 라이브러리를 사용합니다. 이 라이브러리를 설치해주세요.
+
+```
+yarn add react-native-calendars
+```
+
+- 라이브러리를 설치한 다음에는 CalendarView라는 컴포넌트를 만듭니다. 이 컴포넌트에서는 방금 설치한 라이브러리를 사용해 달력을 보여주고, 로그가 작성된 날짜를 달력에 표시하도록 구현하겠습니다.
+
+> components/CalendarView.js
+
+```jsx
+import React from 'react';
+import {Calendar} from 'react-native-calendars';
+import {StyleSheet} from 'react-native';
+
+function CalendarView() {
+  return <Calendar style={styles.calendar} />;
+}
+
+const styles = StyleSheet.create({
+  calendar: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+});
+
+export default CalendarView;
+```
+
+- CalendarView 컴포넌트를 작성한 다음 CalendarScreen에서 사용해주세요.
+
+> screens/CalendarScreen.js
+
+```jsx
+import React from 'react';
+import CalendarView from '../components/CalendarView';
+
+function CalendarScreen() {
+  return <CalendarView />;
+}
+
+export default CalendarScreen;
+```
+![image8](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/07%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/8.png)
+> react-native-calendars
+
+## 달력에 표시하기
+
+- 앞으로 사용자가 달력에서 특정 날짜를 선택해 해당 날짜에 작성된 로그를 조회할 수 있는 기능을 구현해볼 것입니다. 이 기능을 구현하기 위해 사용자가 현재 선택한 날짜, 로그를 작성한 날짜에 특별한 표시를 해주겠습니다. 추가로 달력에 사용되는 색상들도 변경해보겠습니다.
+
+> components/CalendarView.js
+
+```jsx
+import React from 'react';
+import {Calendar} from 'react-native-calendars';
+import {StyleSheet} from 'react-native';
+
+function CalendarView() {
+  // 현재 연/월 사용하기
+  const markedDates = {
+    '2021-05-17': {
+      selected: true,
+    },
+    '2021-05-18': {
+      makred: true,
+    },
+    '2021-05-19': {
+      marked: true,
+    },
+  };
+  return (
+    <Calendar
+      style={styles.calendar}
+      markedDates={markedDates}
+      theme={{
+        selectedDayBackgroundColor: '#009688',
+        arrowColor: '#009688',
+        dotColor: '#009688',
+        todayTextColor: '#009688',
+      }}
+    />
+  );
+}
+
+const styles = StyleSheet.create({
+  calendar: {
+     borderBottomWidth: 1,
+     borderBottomColor: '#e0e0e0',
+  },
+});
+
+export default CalendarView;
+```
+
+- 달력에 표시하기 위해 markedDates라는 객체를 사용합니다. 이 객체에 들어가는 키 값은 날짜의 ‘yyyy-MM-dd’ 형태입니다. 표시를 원하는 각 날짜에 객체를 만들고, 거기에 marked 값을 true로 설정하면 날짜에 점이 나타납니다. selected 값을 true로 설정하면 이 날짜를 선택했다는 의미로 날짜의 배경색을 변경합니다. 표시하는 색상은 theme이라는 Props를 통해 변경할 수 있습니다.
+- 참고로 달력에서 사용하는 색상은 앱을 리로드해야 반영됩니다.
+
+![image9](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/07%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/9.png)
+> 달력에 표시하기
+
+## 데이터를 달력과 연동하기
+
+- 데이터의 날짜를 표시하도록 구현해보겠습니다. 우선 CalendarScreen에서 LogContext의 logs 배열을 받아오세요.
+
+> screens/CalendarScreen.js
+
+```jsx
+import React, {useContext} from 'react';
+import CalendarView from '../components/CalendarView';
+import LogContext from '../contexts/LogContext';
+
+function CalendarScreen() {
+  const {logs} = useContext(LogContext);
+  return <CalendarView />;
+}
+
+export default CalendarScreen;
+```
+
+- 다음으로 이 logs 배열을 Calendar 컴포넌트의 markedDates Props 형태로 변환해줍니다. 변환된 객체는 CalendarView에 전달해주세요.
+
+> screens/CalendarScreen.js
+
+```jsx
+import {format} from 'date-fns';
+import React, {useContext} from 'react';
+import CalendarView from '../components/CalendarView';
+import LogContext from '../contexts/LogContext';
+
+function CalendarScreen() {
+  const {logs} = useContext(LogContext);
+  const markedDates = logs.reduce((acc, current) => {
+    const formattedDate = format(new Date(current.date), 'yyyy-MM-dd');
+    acc[formattedDate] = {marked: true};
+    return acc;
+  }, {});
+  
+  return <CalendarView markedDates={markedDates} />;
+}
+
+export default CalendarScreen;
+```
+
+- 다음으로 selectedDate라는 상태를 만들어주세요. 이 값은 현재 선택된 날짜를 의미하며 기본값은 오늘 날짜입니다.
+
+> screens/CalendarScreen.js
+
+```jsx
+import {format} from 'date-fns';
+import React, { useContext, useState } from 'react';
+import CalendarView from '../components/CalendarView';
+import LogContext from '../contexts/LogContext';
+
+function CalendarScreen() {
+  const {logs} = useContext(LogContext);
+  const [selectedDate, setSelectedDate] = useState(
+    format(new Date(), 'yyyy-MM-dd'),
+  );
+  
+  const markedDates = logs.reduce((acc, current) => {
+    const formattedDate = format(new Date(current.date), 'yyyy-MM-dd');
+    acc[formattedDate] = {marked: true};
+    return acc;
+  }, {});
+  
+  return (
+    <CalendarView 
+      markedDates={markedDates}
+      selectedDate={selectedDate}
+      onSelectDate={setSelectedDate}
+    />
+  );
+}
+
+export default CalendarScreen;
+```
+
+- selectedDate와 setSelectedDate 또한 CalendarView에 전달해주세요. setSelectedDate는 onSelectDate라는 이름으로 설정하겠습니다.
+- 그다음에는 CalendarView에서 markedSelectedDate라는 새로운 객체를 만들어 현재 날짜에 selected: true를 설정하세요.
+
+> components/CalendarView.js
+
+```jsx
+import React from 'react';
+import {Calendar} from 'react-native-calendars';
+import {StyleSheet} from 'react-native';
+
+function CalendarView({markedDates, selectedDate, onSelectDate}) {
+  const markedSelectedDate = {
+    ...markedDates,
+    [selectedDate]: {
+      selected: true,
+      marked: markedDates[selectedDate]?.marked,
+    },
+  },
+  
+  return (
+    <Calendar
+      style={styles.calendar}
+      markedDates={markedSelectedDate}
+      theme={{
+        selectedDayBackgroundColor: '#009688',
+        arrowColor: '#009688',
+        dotColor: '#009688',
+        todayTextColor: '#009688',
+      }}
+    />
+  );
+}
+
+...
+
+```
+
+- 이제 달력에서 날짜를 선택했을 때 onSelectDate를 호출해줘야 합니다. 이는 Calendar에 onDayPress라는 Props를 설정해 구현할 수 있습니다.
+
+> components/CalendarView.js = return
+
+```jsx
+function CalendarView({markedDates, selectedDate, onSelectDate}) {
+  ...
+  
+  return (
+    <Calendar 
+      style={styles.calendar}
+      markedDates={markedSelectedDate}
+      onDayPress={(day) => {
+        onSelectDate(day.dateString);
+      }}
+      theme={{
+        selectedDayBackgroundColor: '#009688',
+        arrowColor: '#009688',
+        dotColor: '#009688',
+        todayTextColor: '#009688',
+      }}
+    />
+  );
+}
+```
+
+- 참고로 여기서 day 객체는 다음과 같이 구성되어 있습니다.
+
+```json
+{
+  "dateString": "2021-08-23", 
+  "day": 23, 
+  "month": 8, 
+  "timestamp": 1629676800000, 
+  "year": 2021
+}
+```
+
+## 달력 하단에 로그 목록 보여주기
+
+- 이번에는 특정 날짜를 선택했을 때 그날 작성된 로그들을 달력 하단에 목록으로 띄워볼 텐데, 이때 FeedList를 재사용할 수 있습니다. FeedList를 CalendarView 하단에 보여주는 것은 아니고, FeedList에서 사용한 FlatList에 ListHeaderComponent라는 Props를 사용할 것입니다. 이 Props를 통해 FlatList의 내용 상단부에 특정 컴포넌트를 보여줄 수 있습니다.
+- FeedList 컴포넌트를 다음과 같이 수정하세요.
+
+> components/FeedList.js
+
+```jsx
+import React from 'react';
+import {FlatList, StyleSheet, View} from 'react-native';
+import FeedListItem from './FeedListItem';
+
+function FeedList({logs, onScrolledToBottom, ListHeaderComponent}) {
+  ...
+  
+  return (
+    <FlatList 
+      data={logs}
+      style={styles.block}
+      renderItem={({item}) => <FeedListItem log={item} />}
+      keyExtractor={(log) => log.id}
+      ItemSeparatorComponent={() => <View style={styles.separator} />}
+      onScroll={onScroll}
+      ListHeaderComponent={ListHeaderComponent}
+    />
+  );
+}
+
+...
+
+```
+
+- 그다음에는 CalendarScreen에서 현재 선택된 날짜로 로그를 필터링해 FeedList에 전달하고 ListHeaderComponent에는 CalendarView를 설정하세요.
+
+> screens/CalendarScreen.js
+
+```jsx
+import {format} from 'date-fns';
+import React, {useContext, useState} from 'react';
+import CalendarView from '../components/CalendarView';
+import FeedList from '../components/FeedList';
+import LogContext from '../contexts/LogContext';
+
+function CalendarScreen() {
+  ...
+  
+  const filteredLogs = logs.filter(
+    (log) => format(new Date(log.date), 'yyyy-MM-dd') === selectedDate),
+  );
+  
+  return (
+    <FeedList 
+      logs={filteredLogs}
+      ListHeaderComponent={
+        <CalendarView 
+          markedDates={markedDates}
+          selectedDate={selectedDate}
+          onSelectDate{setSelectDate}
+        />
+      }
+    />
+  );
+}
+
+export default CalendarScreen;
+```
+
+- 달력에서 날짜를 선택했을 때 달력 하단에 로그 목록이 나타나는지 확인
+
+![image10](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/07%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/10.png)
+> 달력 하단에 로그 보여주기
+
+## useMemo Hook으로 최적화하기
+
+- 현재 이 컴포넌트는 리렌더링될 때마다 markedDates를 생성합니다. 날짜가 변경될 때도 컴포넌트가 리렌더링되는데요. markedDates는 날짜가 바뀌어도 변하지 않기 때문에 매번 생성할 필요가 없습니다.
+- 이러한 상황에는 useMemo라는 Hook을 사용해 값을 메모이제이션(memoization)해 최적화할 수 있습니다. 메모이제이션이란 동일한 계산을 반복해야 할 때 불필요한 연산을 제거하기 위해 이전에 계산한 값을 재사용해 처리를 최적화하는 것을 의미합니다.
+- 이 Hook의 사용법은 다음과 같습니다.
+
+```javascript
+const value = useMemo(() => compute(a, b), [a, b]);
+```
+
+- 이렇게 Hook을 사용하면 a나 b의 값이 변경될 때만 값이 연산됩니다.
+- CalendarScreen에서 useMemo Hook을 사용한다면 다음과 같이 사용할 수 있습니다.
+
+> screens/CalendarScreen.js
+
+```jsx
+import {format} from 'date-fns';
+import React, {useContext, useMemo, useState} from 'react';
+import CalendarView from '../components/CalendarView';
+import FeedList from '../components/FeedList';
+import LogContext from '../contexts/LogContext';
+
+function CalendarScreen() {
+  const {logs} = useContext(LogContext);
+  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  
+  const markedDates = useMemo(
+    () => 
+      logs.reduce((acc, current) => {
+        const formattedDate = format(new Date(current.date), 'yyyy-MM-dd');
+        acc[formattedDate] = {marked: true);
+        return acc;        
+      }, {}),
+    [logs],
+  );
+  
+  ...
+  
+}
+
+...
+
+```
+
+- 이렇게 하면 logs 배열이 바뀔 때만 logs.reduce 함수가 수행됩니다
+- filteredLogs 배열을 만드는 부분에 useMemo를 사용하는 것도 생각해볼 수 있는데요. 이 상황에 useMemo를 사용하는 것은 불필요합니다. 
+- 이 컴포넌트가 리렌더링되는 시점을 생각해보세요. selectedDate가 바뀌거나 logs가 바뀔 때인데 어차피 매번 필터링을 다시 해야 하기 때문입니다.
+
+## 날짜 및 시간 수정 기능 구현하기
