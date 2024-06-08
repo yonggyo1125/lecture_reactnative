@@ -1141,3 +1141,543 @@ function CalendarScreen() {
 - 이 컴포넌트가 리렌더링되는 시점을 생각해보세요. selectedDate가 바뀌거나 logs가 바뀔 때인데 어차피 매번 필터링을 다시 해야 하기 때문입니다.
 
 ## 날짜 및 시간 수정 기능 구현하기
+
+- 이제 로그를 작성할 때, react-native-modal-datetime-picker라는 라이브러리를 사용해 로그의 날짜 및 시간을 수정하는 기능을 구현해보겠습니다. 우선 해당 라이브러리를 설치해주세요.
+
+```
+yarn add react-native-modal-datetime-picker @react-native-community/datetimepicker
+```
+
+- @react-native-community/datetimepicker는 iOS와 안드로이드 각각 플랫폼에 특화된 날짜/시간 선택 컴포넌트를 제공합니다. 그리고 react-native-modal-datetime-picker는 날짜/시간 선택 컴포넌트를 모달 형태로 쉽게 사용할 수 있게 해줍니다.
+- 이 라이브러리는 네이티브 코드를 사용하기 때문에, 라이브러리를 설치한 후 시뮬레이터를 다시 실행해줘야 합니다.
+
+```
+yarn android
+npx pod-install
+yarn ios
+```
+
+## WriteHeader에서 날짜 및 시간 보여주기
+
+- 우선 WriteScreen에서 date 상태를 만들어주세요. 그리고 onSave에서 수정하거나 새로 저장할 때 date 상태를 사용하도록 변경합니다. WriteHeader에는 date와 onChangeDate를 Props로 넣어주세요.
+
+> screens/WriteScreen.js
+
+```jsx
+import {useNavigation} from '@react-navigation/native';
+import React, {useContext, useState} from 'react';
+import {Alert, KeyboardAvoidingView, Platform, StyleSheet} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import WriteEditor from '../components/WriteEditor';
+import WriteHeader from '../components/WriteHeader';
+import LogContext from '../contexts/LogContext';
+
+function WriteScreen({route}) {
+  const log = route.params?.log;
+  
+  const [title, setTitle] = useState(log?.title ?? '');
+  const [body, setBody] = useState(log?.body ?? '');
+  const navigation = useNavigation();
+  const [date, setDate] = useState(log ? new Date(log.date) : new Date());
+  const [onCreate, onModify, onRemove] = useContext(LogContext);
+  
+  ...
+  
+  const onSave = () => {
+    if (log) {
+      onModify({
+        id: log.id,
+        date: date.toISOString(),
+        title,
+        body,
+      }); 
+    } else {
+      onCreate({
+        title,
+        body,
+        date: date.toISOString(),
+      });
+    }
+    navigation.pop();
+  };
+  
+  return (
+    <SafeAreaView style={styles.block}>
+      <KeyboardAvoidingView
+        style={styles.avoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <WriteHeader
+          onSave={onSave}
+          onAskRemove={onAskRemove}
+          isEditing={!!log}
+          date={date}
+          onChangeDate={setDate}
+        />
+        <WriteEditor 
+          title={title}
+          body={body}
+          onChangeText={setTitle}
+          onChangeBody={setBody}
+        />
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+...
+
+```
+
+- 그다음에는 WriteHeader에서 Props로 받아온 date를 보여주도록 수정해야 합니다. 이는 컴포넌트 중앙에 위치시켜봅시다. position: 'absolute' 속성을 가진 View를 사용해 간단하게 레이아웃을 구성해보겠습니다.
+
+> components/WriteHeader.js
+
+```jsx
+import {useNavigation} from '@react-navigation/native';
+import {format} from 'date-fns';
+import {ko} from 'date-fns/locale';
+import React from 'react';
+import {Pressable, StyleSheet, Text, View} from 'react-native';
+import TransparentCircleButton from './TransparentCircleButton';
+
+function WriteHeader({onSave, onAskRemove, isEditing, date, onChangeDate}) {
+  const navigation = useNavigation();
+  const onGoBack = () => {
+    navigation.pop();
+  };
+  
+  return (
+    <View style={styles.block}>
+      ...
+      <View style={styles.center}>
+        <Pressable>
+          <Text>
+            {format(new Date(date), 'PPP', {
+              locale: ko,
+            })}
+          </Text>
+        </Pressable>
+        <View style={styles.separator} />
+        <Pressable>
+          <Text>{format(new Date(date), 'p', {locale: ko})}</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  ...
+  
+  center: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: -1,
+    flexDirection: 'row',
+  },
+  separator: {
+    width: 8,
+  },
+});
+
+export default WriteHeader;
+```
+
+- center 스타일에서는 position: 'absolute'를 설정하고 left, right, top, bottom 값을 모두 0으로 설정했는데, 이는 이 컴포넌트의 상위 컴포넌트 크기만큼 꽉 채우겠다는 의미
+- zIndex라는 속성은 컴포넌트가 다른 컴포넌트와 위치가 중첩될 때 앞 레이어에 나타날지 뒤 레이어에 나타날지 결정하는 값인데, 기본적으로 더 높은 값이 더 낮은 값을 가진 컴포넌트를 가립니다.
+- 만약 이 값을 -1로 설정하면 다른 컴포넌트들의 뒤 레이어에 나타나게 되고, 설정하지 않으면 투명한 레이어가 기존 컴포넌트를 모두 가리는 것이나 마찬가지이기 때문에 뒤로가기나 저장, 삭제 버튼이 눌리지 않게 됩니다.
+- 컴포넌트를 수정한 뒤, 다음과 같이 날짜와 시간이 잘 나타나는지 확인해보세요.
+
+![image11](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/07%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/11.png)
+> WrhiteHeader에 날짜 및 시간 보여주기 
+
+## DateTimePickerModal 컴포넌트 사용하기
+- 이번에는 날짜 또는 시간을 누르면 DateTimePickerModal 컴포넌트를 보여줘서 날짜를 수정할 수 있게 만들어주겠습니다.
+- 이 컴포넌트는 다음과 같이 사용합니다.
+
+```jsx
+<DateTimePickerModal
+  onConfirm={onConfirm}
+  onCancel={onCancel}
+  mode={mode}
+  date={date}
+  isVisible={visible}
+/>
+```
+
+- onConfirm: 날짜를 선택했을 때 호출되는 함수입니다. 함수의 파라미터는 Date 객체입니다.
+- onCancel: 날짜 선택을 취소했을 때 호출되는 함수입니다.
+- mode: 모달의 모드를 설정합니다. 설정할 수 있는 값은 date, time, datetime입니다.
+- date: 컴포넌트에서 보여졌을 때 초깃값으로 설정할 Date 객체 타입의 값입니다.
+- isVisible: 이 값을 true로 설정하면 모달이 보이고, false로 설정하면 모달이 사라집니다.
+
+- 날짜를 눌렀을 때는 'date' 모드, 시간을 선택했을 때는 'time' 모드를 사용하겠습니다. 컴포넌트를 다음과 같이 수정해보세요.
+
+> components/WriteHeader.js
+
+```jsx
+import {useNavigation} from '@react-navigation/native';
+import {format} from 'date-fns';
+import {ko} from 'date-fns/locale';
+import React, {useState} from 'react';
+import {Pressable, StyleSheet, Text, View} from 'react-native';
+import TransparentCircleButton from './TransparentCircleButton';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+
+function WriteHeader({onSave, onAskRemove, isEditing, date, onChangeDate}) {
+  const navigation = useNavigation();
+  const onGoBack = () => {
+    navigation.pop();
+  };
+  
+  const [mode, setMode] = useState('date');
+  const [visible, setVisible] = useState(false);
+  
+  const onPressDate = () => {
+    setMode('date');
+    setVisible(true);
+  };
+  
+  const onPressTime = () => {
+    setMode('time');
+    setVisible(true);
+  };
+  
+  const onConfirm = (selectedDate) => {
+    setVisible(false);
+    onChangeDate(selectedDate);
+  };
+  
+  const onCancel = () => {
+    setVisible(false);
+  };
+  
+  return (
+    <View style={styles.block}>
+      ...
+      <View style={styles.center}>
+        <Pressable onPress={onPressDate}>
+          <Text>
+            {format(new Date(date), 'PPP', {
+              locale: ko,
+            })}
+          </Text>
+        </Pressable>
+        <View style={styles.seperator} />
+        <Pressable onPress={onPressTime}>
+          <Text>{format(new Date(date), 'p', {locale: ko})}</Text>
+        </Pressable>
+      </View>
+      <DateTimePickerModal
+        isVisible={visible}
+        mode={mode}
+        onConfirm={onConfirm}
+        onCancel={onCancel}
+        date={date}
+      />
+    </View>
+  );
+}
+
+...
+
+```
+
+- 여기까지 작성했다면 이제 로그 작성 중에 날짜 또는 시간을 눌러서 수정할 수 있을 것입니다.
+
+![image12](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/07%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EB%A6%AC%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20II/images/12.png)
+> DateTimePickerModal 사용하기
+
+# useReducer Hook 함수 사용하기
+
+- useReducer 함수는 상태를 관리할 때 사용할 수 있는 또 다른 Hook 함수입니다. 이 함수를 사용할 때는 다음과 같은 개념이 사용됩니다.
+  - state: 상태
+  - action: 변화를 정의하는 객체
+  - reducer: state와 action을 파라미터로 받아와서 그다음 상태를 반환하는 함수
+  - dispatch: action을 발생시키는 함수
+- 이 Hook은 이번 예제와 같이 useState를 여러 번 사용하는 상황에서 사용하면 유용할 수 있습니다. 유용할 수도 있다는 건 무조건 이 Hook을 사용할 필요는 없다는 뜻입니다. 상황에 따라 useState로만 구현하는 게 편할 때도 있고, useReducer를 사용하는 게 편할 때도 있습니다.
+- WriteHeader의 경우도 꼭 useReducer를 사용할 필요는 없습니다. 하지만 useReducer를 사용해보기에 적합한 상황이기도 해서 공부 삼아 사용법을 한번 알아보겠습니다.
+- onPressDate 함수를 보면 setMode와 setVisible을 호출하고 있는데요.
+
+```jsx
+const onPressDate = () => {
+  setMode('date');
+  setVisible(true);
+};
+```
+
+- 이렇게 각기 다른 상태를 동시에 업데이트하는 상황에는 useReducer로 구현하는 것을 고민해보면 좋습니다.
+- 이 Hook을 사용해보기 전에 간단한 예시를 확인해보겠습니다.
+- 카운터를 useReducer로 구현한다면 다음과 같이 구현할 수 있습니다.
+
+```jsx
+const initialState = {value: 1};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'increase':
+      return {value: state.value + 1};
+    case 'decrease':
+      return {value: state.value - 1};
+    default:
+      throw new Error('Unhandled action type');
+  }
+}
+
+function Counter() {
+  const [sdate, dispatch] = useReducer(reducer, initialState);
+  
+  const onIncrease = () => dispatch({type: 'increase'});
+  const onDecrease = () => dispatch({type: 'decrease'});
+  
+  ...
+}
+```
+
+- 이 코드를 보고 ‘왜 이 상황에 useState를 사용하지 않고 이렇게 복잡하게 구현하지?’라고 생각할 수 있습니다. 이렇게 간단히 업데이트하는 상황이라면 useState를 사용하는 것이 더 적합합니다.
+- useReducer는 상태를 업데이트하는 로직을 컴포넌트 바깥에 구현할 수 있다는 장점이 있습니다. 덧붙여 dispatch라는 함수 하나로 다양하게 업데이트할 수 있기 때문에 Context와 함께 사용하면 유용합니다.
+- useReducer의 첫 번째 인자에는 reducer 함수를 넣고, 두 번째 인자에는 상태의 초깃값을 넣습니다. 이 함수의 결과물 배열의 첫 번째 원소는 현재 상태이고, 두 번째 원소는 dispatch 함수입니다.
+- onIncrease 함수를 보면 dispatch({type: 'decrease'})를 실행했죠? 이렇게 액션 객체를 인자에 넣어 dispatch 함수가 호출되면 reducer 함수가 호출됩니다. 이때 state 파라미터는 현재 상태를 가리키고, action은 dispatch 함수의 인자로 넣은 액션 객체를 가리킵니다. reducer에서 반환하는 값이 그다음 업데이트할 값으로 사용됩니다.
+- reducer를 보면 action.type에 따라 업데이트하도록 구현되어 있습니다. action 객체는 보통 이렇게 type이라는 키를 가지고 있습니다. 상황에 따라 다른 값을 action 객체에 자유롭게 넣을 수 있습니다. 
+
+```jsx
+const initialState = {value: 1};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'increase':
+      return {value: state.value + action.diff};
+    case 'decrease':
+      return {value: state.value - action.diff};
+    default:
+      throw new Error('Unhandled action type');
+  }
+}
+
+function Counter() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const onIncrease = () => dispatch({type: 'increase', diff: 1});
+  const onDecrease = () => dispatch({type: 'decrease', diff: 1});
+  
+  ....
+  
+}
+```
+
+- WriteHeader를 useReducer로 구현하는 경우
+
+> components/WriteHeader.js
+
+```jsx
+import {useNavigation} from '@react-navigation/native';
+import {format} from 'date-fns';
+import {ko} from 'date-fns/locale';
+import React, {useReducer} from 'react';
+import {Pressable, StyleSheet, Text, View} from 'react-native';
+import TransparentCircleButton from './TransparentCircleButton';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+
+const initialState = {mode: 'date', visible: false};
+function reducer(state, action) {
+  switch (action.type) {
+    case 'open':
+      return {
+        mode: action.mode,
+        visible: true,
+      };
+    case 'close':
+      return {
+        ...state,
+        visible: false,
+      };
+    default: 
+      throw new Error('Unhandled action type');
+  }
+}
+
+function WriteHeader({onSave, onAskRemove, isEditing, date, onChangeDate}) {
+  const navigation = useNavigation();
+  const onGoBack = () => {
+    navigation.pop();
+  };
+  
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const open = (mode) => dispatch({type: 'open', mode});
+  const close = () => dispatch({type: 'close'});
+  
+  const onConfirm = (selectedDate) => {
+    close();
+    onChangeDate(selectedDate);
+  };
+  
+  return (
+    <View style={styles.block}>
+      <View style={styles.iconButtonWrapper}>
+        <TransparentCircleButton 
+          onPress={onGoBack}
+          name="arrow-back"
+          color="#424242"
+        />
+      </View>
+      <View style={styles.buttons}>
+        {isEditing && (
+          <TransparentCircleButton 
+            name="delete-forever"
+            color="#ef5350"
+            hasMarginRight
+            onPress={onAskRemove}
+          />
+        )}
+        <TransparentCircleButton
+          name="check"
+          color="#009688"
+          onPress={onSave}
+        />
+      </View>
+      <View style={styles.center}>
+        <Pressable onPress={() => open('date')}>
+          <Text>
+            {format(new Date(date), 'PPP', {
+              locale: ko,
+            })}
+          </Text>
+        </Pressable>
+        <View style={styles.seperator} />
+        <Pressable onPress={() => open('time')}>
+          <Text>{format(new Date(date), 'p', {locale: ko})}</Text>
+        </Pressable>
+      </View>
+      <DateTimePickerModal 
+        isVisible={state.visible}
+        mode={state.mode}
+        onConfirm={onConfirm}
+        onCancel={close}
+        date={date}
+      />
+    </View>
+  );
+}
+
+...
+
+```
+
+- 앞으로 상태를 관리할 때 기본적으로는 useState를 사용해 구현하고, 함께 바뀌는 상태 값들이 많아졌을 때는 useReducer를 사용할지 고민해보면 좋습니다.
+
+# AsyncStorage로 데이터 유지하기
+
+- AsyncStorage로 앱을 종료해도 데이터를 유지하도록 구현해주겠습니다.
+- 라이브러리를 설치해주세요.
+
+```
+yarn add @react-native-community/async-storage
+```
+
+- 시뮬레이터를 다시 실행해주세요.
+
+```
+yarn android
+npx pod-install 
+yarn ios
+```
+
+- storages 디렉터리를 만들고 그 안에 logsStorage.js 파일을 다음과 같이 작성하세요.
+
+> storages/logsStorage.js
+
+```jsx
+import AsyncStorage from '@react-native-community/async-storage';
+
+const key = 'logs';
+
+const logsStorage = {
+  async get() {
+    try {
+      const raw = await AsyncStorage.getItem(key);
+      const parsed = JSON.parse(raw);
+      return parsed;
+    } catch (e) {
+      throw new Error('Failed to load logs');
+    }
+  },
+  async set(data) {
+    try {
+      await AsyncStorage.setItem(key, JSON.stringify(data));
+    } catch (e) {
+      throw new Error('Failed to save logs');
+    }
+  },
+};
+
+export default logsStorage;
+```
+
+- logsStorage를 만들었으니 LogContext에서 사용해주겠습니다. 이제 logs 상태의 초깃값도 지우고, 빈 배열로 변경해주세요.
+
+> contexts/LogContext.js
+
+```jsx
+import React, {useEffect, useRef} from 'react';
+import {createContext, useState} from 'react';
+import {v4 as uuidv4} from 'uuid';
+import logStorage from '../storages/logsStorage';
+
+const LogContext = createContext();
+
+export function LogContextProvider({children}) {
+  const initialLogsRef = useRef(null);
+  const [logs, setLogs] = useState([]);
+  
+  const onCreate = ({title, body, date}) => {
+    ...
+  };
+  
+  useEffect(() => {
+    // useEffect 내에서 async 함수를 만들고 바로 호출
+    // IIFE 패턴
+    (async () => {
+      const savedLogs = await logsStorage.get();
+      if (savedLogs) {
+        initialLogsRef.current = savedLogs;
+        setLogs(savedLogs);
+      }
+    })();
+  }, []);
+  
+  useEffect(() => {
+    if (logs === initialLogsRef.current) {
+      return;
+    }
+    
+    logsStorage.set(logs);
+  }, [logs]);
+   
+   return (
+    <LogContext.Provider value={{logs, onCreate, onModify, onRemove}}>
+      {children}
+    </LogContext.Provider>
+   );
+}, []);
+```
+
+- . 우선 딱 한 번만 호출되는 첫 번째 useEffect 내부에서 IIFE 패턴을 사용해 async 함수를 만들어 바로 호출해줬습니다. IIFE 패턴이 보기 복잡하면 함수를 선언하고 그다음 라인에서 호출해 사용해도 무방합니다. 다음 코드는 IIFE를 사용하지 않는 코드의 예시입니다.
+
+```jsx
+useEffect(() => {
+  const save = async () => {
+    const savedLogs = await logsStorage.get();
+    if (savedLogs) {
+      initialLogsRef.current = savedLogs;
+      setLogs(savedLogs);
+    }
+  }
+  save();
+}, []);
+```
+
+- 두 번째 useEffect에서는 logs 배열이 바뀔 때마다 logsStorage에 저장하도록 만들었습니다. 앱을 켰을 때 데이터가 있다면 데이터를 불러와 setLogs를 호출하게 되는데, 불러오는 과정에서 호출될 때도 두 번째 useEffect가 실행되기 때문에 실제로는 데이터에 변경이 없는데도 한 번 더 저장하게 됩니다. 이를 방지하기 위해 불러온 초기 데이터를 useRef로 기억하도록 만들었습니다. 이렇게 하면 불필요한 저장을 하지 않아 앱을 가동할 때 사용하는 리소스를 아낄 수 있죠.
