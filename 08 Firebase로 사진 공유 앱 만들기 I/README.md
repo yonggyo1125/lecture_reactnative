@@ -12,3 +12,101 @@
     - Firebase 연동하기
     - 회원 인증 구현하기
     - 사진 선택 및 업로드하기 
+
+# 프로젝트 준비하기
+
+- 리액트 네이티브 프로젝트를 생성하고 Firebase를 연동해봅시다. 먼저 다음 명령어를 사용해 프로젝트를 생성하세요.
+
+```
+npx react-native init PublicGalley<닉네임> --version 0.70
+```
+
+- 프로젝트를 생성할 때 이름 뒷부분에 여러분의 닉네임을 알파벳으로만 입력하세요(예, PublicGalleryYonggyo). 
+- Firebase는 프로젝트의 패키지 이름으로 프로젝트를 구분하는데, 많은 분이 PublicGallery라고 만든다면 프로젝트 패키지가 겹쳐서 추후 Firebase를 적용할 때 오류가 발생하기 때문입니다.
+- 패키지 이름을 변경할 수 있긴 하지만, 번거로운 편이므로 프로젝트를 만들 때 뒷부분에 여러분의 닉네임을 넣어주세요.
+
+## 내비게시션과 아이콘 설정하기
+
+- 프로젝트를 생성했으면 프로젝트 디렉터리로 이동해 내비게이션 관련 라이브러리와 아이콘 라이브러리를 설치하세요.
+
+```
+cd PublicGallery<닉네임>
+yarn add @react-navigation/native react-native-screens react-native-safe-area-context @react-navigation/native-stack @react-navigation/bottom-tabs react-native-vector-icons
+```
+
+- 설치 후에는 npx pod-install 명령어를 실행해주세요.
+- 라이브러리를 적용하겠습니다. screens 디렉터리를 만들고, 그 안에 RootStack.js 파일을 생성해 다음과 같이 작성하세요.
+
+> screens/RootStack.js
+
+```jsx
+import React from 'react';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+
+const Stack = createNativeStackNavigator();
+
+function RootStack() {
+  return <Stack.Navigator>{/* 화면 추가 예정 */}</Stack.Navigator>;
+}
+
+export default RootStack;
+```
+
+- App.js에 있던 코드를 모두 지우고 다음과 같이 입력하세요.
+
+> App.js
+
+```jsx
+import React from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import RootStack from './screens/RootStack';
+
+function App() {
+  return (
+    <NavigationContainer>
+      <RootStack />    
+    </NavigationContainer>
+  );
+}
+
+export default App;
+```
+
+- 이제 내비게이션 적용은 끝났습니다. react-native-vector-icons를 적용할 차례입니다. 앞에서 다이어리 앱을 만들 때와 동일하게 MaterialIcons를 사용하겠습니다.
+- 다음 파일들을 수정해주세요.
+
+> ios/PublicGallery\<닉네임\>/Info.plist
+
+```xml
+...
+
+  <key>UIViewControllerBasedStatusBarAppearance</key>
+  <false/>
+  <key>UIAppFonts</key>
+  <array>
+      <string>MaterialIcons.ttf</string>
+  </array>
+</dict>
+</plist>
+```
+
+> android/app/build.gradle 
+
+```groovy
+...
+
+project.ext.vectoricons = [
+        iconFontNames: [ 'MaterialIcons.ttf' ]
+]
+
+apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+```
+
+
+## Firebase 적용하기
+
+- Firebase를 적용하려면 우선 다음 페이지에서 구글 계정으로 로그인해야 합니다.
+- [http://firebase.google.com](http://firebase.google.com)
+- 로그인한 뒤 우측 상단의 콘솔로 이동 버튼을 누르면 다음과 같은 화면이 나올 것입니다.
+
+- 프로젝트 만들기 버튼을 누르고 프로젝트 이름을 입력하세요. 여기서 입력할 프로젝트 이름은 고유하지 않아도 상관없기 때문에 여러분 마음대로 입력해도 됩니다. Firebase에 중복된 프로젝트 이름이 이미 등록되어 있다면 자동으로 고유 문자열을 뒤에 붙여서 프로젝트 이름을 고유하게 해줍니다. 
