@@ -109,4 +109,162 @@ apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
 - [http://firebase.google.com](http://firebase.google.com)
 - 로그인한 뒤 우측 상단의 콘솔로 이동 버튼을 누르면 다음과 같은 화면이 나올 것입니다.
 
-- 프로젝트 만들기 버튼을 누르고 프로젝트 이름을 입력하세요. 여기서 입력할 프로젝트 이름은 고유하지 않아도 상관없기 때문에 여러분 마음대로 입력해도 됩니다. Firebase에 중복된 프로젝트 이름이 이미 등록되어 있다면 자동으로 고유 문자열을 뒤에 붙여서 프로젝트 이름을 고유하게 해줍니다. 
+![image1](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/08%20Firebase%EB%A1%9C%20%EC%82%AC%EC%A7%84%20%EA%B3%B5%EC%9C%A0%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/1.png)
+> Firebase Console
+
+- 프로젝트 만들기 버튼을 누르고 프로젝트 이름을 입력하세요. 여기서 입력할 프로젝트 이름은 고유하지 않아도 상관없기 때문에 여러분 마음대로 입력해도 됩니다. Firebase에 중복된 프로젝트 이름이 이미 등록되어 있다면 자동으로 고유 문자열을 뒤에 붙여서 프로젝트 이름을 고유하게 해줍니다. 여기에서는 public-gallery라고 입력하겠습니다.
+- 계속 버튼을 누르면 Google 애널리틱스를 사용할지 물어볼 텐데 이 프로젝트에서는 필요하지 않으므로 비활성화한 뒤 프로젝트 만들기 버튼을 누르세요. 잠시 기다리면 프로젝트가 생성됩니다.
+
+![image2](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/08%20Firebase%EB%A1%9C%20%EC%82%AC%EC%A7%84%20%EA%B3%B5%EC%9C%A0%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/2.png)
+> Firebase에서 새 프로젝트 생성하기 
+
+- 이제 Firebase에 프로젝트 정보를 입력하고, 연동해야 합니다.
+
+### 안드로이드에 Firebase 적용하기
+
+- Firebase 페이지를 보면 다음과 같이 ‘앱에 Firebase를 추가하여 시작하기’라는 문구와 함께 버튼들이 있습니다. 두 번째 버튼인 안드로이드 버튼을 누르세요.
+
+![image3](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/08%20Firebase%EB%A1%9C%20%EC%82%AC%EC%A7%84%20%EA%B3%B5%EC%9C%A0%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/3.png)
+> 안드로이드에 Firebase 추가하기
+
+- Android 패키지 이름에는 com.publicgallery\<닉네임\>을 입력하세요. \<닉네임\> 부분에는 아까 프로젝트를 생성할 때 맨 뒤에 넣었던 여러분의 닉네임을 넣으면 됩니다. 참고로 프로젝트의 패키지 이름은 android/app/build.gradle 파일에서 applicationId 부분에서 확인할 수 있습니다.
+- 두 번째 항목인 앱 닉네임에는 PublicGallery를 입력하세요.
+- 세 번째 항목인 디버그 서명 인증서 SHA-1은 프로젝트 경로에서 다음 명령어를 입력해 확인할 수 있습니다.
+
+```
+keytool -j-Duser.language=en -list -v -alias androiddebugkey -keystore ./android/app/debug.keystore
+```
+
+> keytool 언어 설정
+> 
+> 이 명령어를 보면 -J-Duser.language=en이라는 옵션을 추가해 키에 대한 정보를 영어로 보여주게 했습니다. 시스템 설정이 한국어로 되어 있다면 기본적으로는 한국어로 설명이 나옵니다.
+> 
+> 언어 설정을 영어로 지정한 이유는 OpenJDK 8의 keytool에서 더 이상 MD5 지문을 보여주지 않는데, 한국어 설명에는 반영되지 않아 지문의 값이 한 줄 밀려서 SHA1이 있을 자리에 SHA256 값이 나타나는 버그가 있기 때문입니다.
+
+- 명령어를 입력하면 키 비밀번호를 물어볼 텐데 공백 상태로 바로 Enter를 누르세요. 그러면 다음과 같은 내용이 출력됩니다.
+
+```
+Alias name: androiddebugkey
+Creation date: Jan 1, 2014
+Entry type: PrivateKeyEntry
+Certificate chain length: 1
+Certificate[1]:
+Owner: CN=Android Debug, OU=Android, O=Unknown, L=Unknown, ST=Unknown, C=US
+Issuer: CN=Android Debug, OU=Android, O=Unknown, L=Unknown, ST=Unknown, C=US
+Serial number: 232eae62
+Valid from: Wed Jan 01 07:35:04 KST 2014 until: Wed May 01 07:35:04 KST 2052
+Certificate fingerprints:
+       SHA1: 5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25
+       SHA256: FA:C6:17:45:DC:09:03:78:6F:B9:ED:E6:2A:96:2B:39:9F:73:48:F0:BB:6F:89:9B:83:32:66:75:91:03:3B:9C
+Signature algorithm name: SHA1withRSA (weak)
+Subject Public Key Algorithm: 2048-bit RSA key (3)
+Version: {10}
+```
+
+- 인증서 지문의 SHA1 부분을 복사해 붙여넣으세요. 세 항목을 모두 입력한 뒤 앱 등록 버튼을 누르면 구성 파일 다운로드 섹션이 활성화될 것입니다.
+
+![image4](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/08%20Firebase%EB%A1%9C%20%EC%82%AC%EC%A7%84%20%EA%B3%B5%EC%9C%A0%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/4.png)
+> 구성 파일 다운로드
+
+- google-services.json 파일을 다운로드해 android/app 경로에 저장하세요.
+- 저장한 뒤 다음을 누르고, 페이지에 적힌 가이드대로 Firebase SDK를 추가합니다. android/build.gradle 파일을 열어서 dependencies 부분에 다음 코드를 추가하세요. 기존 코드에서는classpath를 추가할 때 괄호와 큰따옴표를 사용했는데요. 괄호를 생략해도 되고 작은따옴표를 사용해도 상관없습니다.
+
+> android/build.gradle - dependencies
+
+```groovy
+dependencies {
+  classpath("com.android.tools.build:gradle:4.2.1")
+  classpath 'com.google.gms:google-services:4.3.10'
+  // NOTE: Do not place your application dependencies here; they belong
+  // in the individual module build.gradle files
+}
+```
+
+-  android/app/build.gradle 파일의 최상단에 다음 코드를 추가하세요.
+
+> android/app/build.gradle
+
+```groovy
+apply plugin: "com.android.application"
+apply plugin: 'com.google.gms.google-services'
+
+...
+
+dependencies {
+  implementation platform('com.google.firebase:firebase-bom:28.4.0')
+  
+  ...
+  
+}
+
+...
+
+```
+
+- 같은 파일에서 defaultConfig를 찾은 뒤 다음 라인을 추가하세요.
+
+> android/app/build.gradle
+
+```groovy
+defaultConfig {
+  applicationId "com.publicgalleryjohndoe"
+  minSdkVersion rootProject.ext.minSdkVersion
+  targetSdkVersion rootProject.ext.targetSdkVersion
+  versionCode 1
+  versionName "1.0"
+  multiDexEnabled true
+}
+```
+
+- 추가한 뒤에는 페이지에서 다음 버튼을 눌러 다시 콘솔 페이지로 이동하세요.
+
+### React Native Firebase 
+- React Native Firebase는 리액트 네이티브에서 Firebase를 쉽게 사용할 수 있게 하는 라이브러리입니다. 구글에서 공식 지원하는 라이브러리는 아니지만, Invertase라는 신뢰할 수 있는 기업에서 관리하고, 품질이 높으며 문서화도 잘 되어 있습니다.
+-  이 라이브러리의 공식 문서는 다음 링크를 참조하세요. [https://rnfirebase.io](https://rnfirebase.io)
+- 다음 명령어로 라이브러리를 설치합니다.
+
+```
+yarn add @react-native-firebase/app @react-native-firebase/auth @react-native-firebase/firestore @react-native-firebase/Storage
+```
+- 이 라이브러리 중 app은 Firebase를 적용할 때 반드시 필요한 라이브러리
+- auth는 회원 인증을 위해, firestore는 실시간 데이터베이스를 위해 필요
+- storage는 추후 이미지를 업로드할 때 필요한 라이브러리
+- 설치가 끝나면 npx pod-install 명령어를 실행하세요.
+- 만약 설치 과정에서 다음과 같은 오류가 발생하면,
+
+```
+[!] CocoaPods could not find compatible versions for pod "Firebase/CoreOnly":
+```
+
+- ios 디렉터리로 이동한 후 다음 명령어를 입력하세요.
+
+```
+pod install --repo-update
+```
+
+## 화면 구성 이해하기
+
+- 이번에 만들 PublicGallery 앱에는 화면 총 9개, 탭 1개, 스택 3개를 만들 것입니다. 
+- 이번 프로젝트는 사용하는 화면이 꽤 많기 때문에 지난 프로젝트처럼 화면을 위한 컴포넌트들을 한꺼번에 미리 만들지 않고, 개발 과정에서 하나씩 생성하겠습니다.
+- 각 스택, 탭, 화면의 역할은 다음과 같습니다.
+
+![image5](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/08%20Firebase%EB%A1%9C%20%EC%82%AC%EC%A7%84%20%EA%B3%B5%EC%9C%A0%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/5.png)
+> 화면 설계
+
+- RootStack: 프로젝트의 최상위 스택입니다.
+- MainTab: 로그인하면 보일 화면입니다.
+  - HomeStack: 첫 번째 탭인 홈의 스택입니다.
+- FeedScreen: 포스트들의 목록을 볼 수 있는 화면입니다.
+- PostScreen: 하나의 포스트를 볼 수 있는 화면입니다.
+- ProfileScreen: 특정 사용자의 프로필을 볼 수 있는 화면입니다.
+  - MyProfileStack: 두 번째 탭인 프로필의 스택입니다.
+- MyProfileScreen: 자신의 프로필을 볼 수 있는 화면입니다.
+- PostScreen: 하나의 포스트를 볼 수 있는 화면입니다. HomeStack과 컴포넌트를 공유합니다.
+  - UploadScreen: 사진을 업로드하는 화면입니다.
+  - ModifyScreen: 포스트의 문구를 수정하는 화면입니다.
+  - SettingScreen: 설정 화면입니다.
+  - SignInScreen: 로그인 화면입니다.
+  - WelcomeScreen: 회원가입 후 프로필 사진과 이름을 설정하는 화면입니다.
+
+
+# 회원 인증 기능 구현하기 
