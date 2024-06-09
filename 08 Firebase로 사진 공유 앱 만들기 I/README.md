@@ -268,3 +268,158 @@ pod install --repo-update
 
 
 # 회원 인증 기능 구현하기 
+
+- 가장 먼저 구현할 기능은 바로 회원 인증입니다. Firebase 덕분에 회원 인증을 간단히 구현할 수 있습니다. Firebase에서는 구글, 페이스북 등의 계정을 사용한 소셜 계정 인증, 이메일/비밀번호 또는 전화번호를 통한 인증을 쉽게 구현할 수 있는데요. PublicGallery 앱에서는 이메일/비밀번호 인증을 사용해보겠습니다.
+- Firebase 콘솔을 열고 좌측 사이드바에서 Authentication을 선택하고, 화면에 나타나는 시작하기 버튼을 누르세요. 잠시 기다리면 회원 인증 기능이 활성화됩니다. 회원 인증 기능이 활성화되면 Sign-in method 탭을 열어보세요. 그리고 이메일/비밀번호를 선택하고 사용 설정을 활성화하세요. 활성화하고 하단의 저장 버튼을 눌러야 합니다.
+
+![image6](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/08%20Firebase%EB%A1%9C%20%EC%82%AC%EC%A7%84%20%EA%B3%B5%EC%9C%A0%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/6.png)
+> 이메일/비밀번호 로그인 활성화
+
+- 다음으로 로그인에 사용할 SignInScreen 화면 컴포넌트를 만들어봅시다.
+
+> screens/SignInScreen.js
+
+```jsx
+import React from 'react';
+import {StyleSheet, Text} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+
+function SignInScreen() {
+  return (
+    <SafeAreaView style={styles.fullscreen}>
+      <Text style={styles.text}>PublicGallery</Text>
+    </SafeAreaView>  
+  );
+}
+
+const styles = StyleSheet.create({
+  fullscreen: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  text: {
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+});
+
+export default SignInScreen;
+```
+
+- 이 컴포넌트는 중앙에 PublicGallery 텍스트를 보여줍니다. 헤더가 존재하지 않는 화면이기 때문에 iOS에서 상태 바 영역을 침범하지 않도록 SafeAreaView를 사용해야 합니다.
+- 컴포넌트를 만든 다음에는 이 화면을 RootStack에 등록하세요.
+
+> screens/RootStack.js
+
+```jsx
+import React from 'react';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import SignInScreen from './SignInScreen';
+
+const Stack = createNativeStackNavigator();
+
+function RootStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen 
+        name="SignIn"
+        component={SignInScreen}
+        options={{headerShown: false}}
+      />
+    </Stack.Navigator>
+  );
+}
+
+export default RootStack;
+```
+
+- 이제 yarn ios와 yarn android 명령어를 입력해 시뮬레이터를 실행하세요.
+
+![image7](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/08%20Firebase%EB%A1%9C%20%EC%82%AC%EC%A7%84%20%EA%B3%B5%EC%9C%A0%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/7.png)
+> SignInScreen 초기 화면
+
+## 회원 인증을 위한 UI 준비하기
+
+- 이 화면에 인풋 두 개와 버튼을 보여주겠습니다. 이 과정에서 테두리가 있는 인풋인 BorderInput 컴포넌트와 임의의 스타일을 가진 CustomButton 컴포넌트를 만들겠습니다. 이 UI들을 한 번만 사용한다면 굳이 새로 컴포넌트를 만들 필요가 없겠지만, 재사용할 것이므로 따로 분리해주는 것입니다.
+- 프로젝트의 최상위 디렉터리에 components 디렉터리를 만들고 다음 컴포넌트들을 작성하세요.
+
+> components/BorderedInput.js
+
+```jsx
+import React from 'react';
+import {StyleSheet, TextInput} from 'react-native';
+
+function BorderedInput({hasMarginBottom}) {
+  return <TextInput style={[styles.input, hasMarginBottom && styles.margin]} />;
+}
+
+const styles = StyleSheet.create({
+  input: {
+    borderColor: '#bdbdbd',
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    borderRadius: 4,
+    height: 48,
+    backgroundColor: 'white',
+  },
+  margin: {
+    marginBottom: 16,
+  }
+});
+
+export default BorderedInput;
+```
+
+- 이 컴포넌트에서 hasMarginBottom 값이 true라면 하단에 여백을 지정해줬습니다. 다음 컴포넌트도 hasMarginBottom Props로 하단 여백을 지정할 수 있고, onPress와 title로 버튼을 클릭했을 때 실행할 함수와 버튼의 이름을 지정할 수 있습니다.
+
+> components/CustomButton.js
+
+```jsx
+import React from 'react';
+import {StyleSheet, View, Pressable, Text, Platform} from 'react-native';
+
+function CustomButton({onPress, title, hasMarginBottom}) {
+  return (
+    <View style={[styles.block, styles.overflow, hasMarginBottom && styles.margin]}>
+      <Pressable
+        onPress={onPress}
+        style={({pressed}) => [
+          styles.wrapper,
+          Platform.OS === 'ios' && pressed && {opacity: 0.5},
+        ]}
+        android_ripple={{
+          color: '#ffffff',
+        }}>
+        <Text style={[styles.text]}>{title}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  overflow: {
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  wrapper: {
+    borderRadius: 4,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#6200ee',
+  },
+  text: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    color: 'white',
+  },
+  margin: {
+    marginBottom: 8,
+  }
+});
+
+export default CustomBotton;
+```
+
+- iOS에서 버튼을 누르면 투명도가 조정되고, 안드로이드에서 버튼을 누르면 물결 효과가 나타납니다. 컴포넌트를 다 만들었다면 SignInScreen에서 사용해보세요.
