@@ -423,3 +423,53 @@ export default CustomBotton;
 ```
 
 - iOS에서 버튼을 누르면 투명도가 조정되고, 안드로이드에서 버튼을 누르면 물결 효과가 나타납니다. 컴포넌트를 다 만들었다면 SignInScreen에서 사용해보세요.
+
+> screens/SignInScreen.js
+
+```jsx
+import React from 'react';
+import {StyleSheet, Text, View} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import BorderedInput from '../components/BorderedInput';
+import CustomButton from '../components/CustomButton';
+
+function SignInScreen() {
+  return (
+    <SafeAreaView style={styles.fullscreen}>
+      <Text style={styles.text}>PublicGallery</Text>
+      <View style={styles.form}>
+        <BorderedInput hasMarginBottom />
+        <BorderedInput />
+        <View style={styles.buttons}>
+          <CustomButton title="로그인" hasMarginBottom />
+          <CustomButton title="회원가입" />
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  fullscreen: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  text: {
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  form: {
+    marginTop: 64,
+    width: '100%',
+    paddingHorizontal: 16,
+  },
+  buttons: {
+    marginTop: 64,
+  },
+});
+
+export default SignInScreen;
+```
+
+![image8](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/08%20Firebase%EB%A1%9C%20%EC%82%AC%EC%A7%84%20%EA%B3%B5%EC%9C%A0%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/8.png)
