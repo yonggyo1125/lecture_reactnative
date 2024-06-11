@@ -473,3 +473,79 @@ export default SignInScreen;
 ```
 
 ![image8](https://raw.githubusercontent.com/yonggyo1125/lecture_reactnative/master/08%20Firebase%EB%A1%9C%20%EC%82%AC%EC%A7%84%20%EA%B3%B5%EC%9C%A0%20%EC%95%B1%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20I/images/8.png)
+
+### rest 연산자와 spread 연산자로 모든 props 그대로 넘겨주기
+
+- 이제 BorderedInput에 onChangeText, placeholder, value Props를 설정해야 합니다. 이 Props를 설정하는 방법은 다음과 같습니다.
+
+> components/BorderedInput.js
+
+```jsx
+import React from 'react';
+import {StyleSheet, TextInput} from 'react-native';
+
+function BorderedInput({hasMarginBottom, onChangeText, value, placeholder}) {
+  return (
+    <TextInput 
+      style={[styles.input, hasMarginBottom && styles.margin]}
+      onChangeText={onChangeText}
+      value={value}
+      placeholder={placeholder}
+    />
+  );
+}
+
+...
+
+```
+
+- 이 코드를 보면 세 가지 Props에 대해 컴포넌트에서 전달받은 Props를 그대로 TextInput에 넣어주고 있습니다. 이러한 상황에 사용하면 유용한 팁이 한 가지 있습니다. 함수의 파라미터 부분에서는 ...rest를 사용해 지정한 키 외의 Props를 rest 객체에 담습니다. 그리고 TextInput 컴포넌트의 Props를 지정하는 JSX 부분에서 {...rest}를 사용해 rest 객체의 모든 키와 값을 TextInput의 Props로 설정하는 것입니다.
+
+> components/BorderedInput.js
+
+```jsx
+import React from 'react';
+import {StyleSheet, TextInput} from 'react-native';
+
+function BorderedInput({hasMarginBottom, ...rest}) {
+  return (
+    <TextInput 
+      style={[styles.input, hasMarginBottom && styles.margin]}
+      {...rest}
+    />
+  );
+}
+
+...
+
+```
+
+- 이전에 ...object와 같은 문법이 spread 연산자 문법이라고 배웠습니다. 그런데 BorderedInput 함수의 파라미터 객체에서 사용된 ...rest는 spread 연산자가 아니라 rest 연산자라고 부릅니다.
+- 결국 BorderedInput의 파라미터 부분에서는 rest 연산자를 사용하고, JSX 부분에서는 spread 연산자를 사용해 Props로 받아온 모든 키와 값을 TextInput 컴포넌트의 Props로 지정해준 것입니다. 이렇게 하면 TextInput에 설정하고 싶은 Props들을 컴포넌트의 파라미터 부분에서 하나하나 입력할 필요가 없겠죠.
+- SignInScreen에서 BorderedInput을 사용할 때 placeholder Props를 설정해보세요.
+
+> components/SignInScreen.js
+
+```jsx
+...
+
+function SignInScreen() {
+  return (
+    <SafeAreaView style={styles.fullscreen}>
+      <Text style={styles.text}>PublicGallery</Text>
+      <View style={styles.form}>
+        <BorderedInput hasMarginBottom placeholder="이메일" />
+        <BorderedInput placeholder="비밀번호" />
+        <View style={styles.buttons}>
+          <CustomButton title="로그인" hasMarginBottom />
+          <CustomButton title="회원가입" />
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+...
+
+```
+
