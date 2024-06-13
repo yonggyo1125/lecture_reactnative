@@ -549,3 +549,36 @@ function SignInScreen() {
 
 ```
 
+### CustomButton에 Secondary 버튼 스타일 만들기
+
+- 앱에서 버튼을 만들 때 흔히 사용하는 UI 패턴은 Primary(기본) 버튼과 Secondary(보조) 버튼을 만드는 것입니다.
+- CustomButton에서 Props를 통해 Secondary 버튼의 스타일을 적용해주겠습니다.
+
+> components/CustomButton.js
+
+```jsx
+import React from 'react';
+import {StyleSheet, View, Pressable, Text, Platform} from 'react-native';
+
+function CustomButton({onPress, title, hasMarginBottom, theme}) {
+  const isPrimary = theme === 'primary';
+  
+  return (
+    <View style={[styles.block, hasMarginBottom && styles.margin]}>
+      <Pressable
+        onPress={onPress}
+        style={({pressed}) => [
+          styles.wrapper,
+          isPrimary && styles.primaryWrapper,
+          Platform.OS === 'ios' && pressed && {opacity: 0.5},
+        ]}
+        android_ripple={{
+          color: isPrimary ? '#ffffff' : '#6200ee', 
+        }}>
+      >
+      
+      </Pressable>
+    </View>
+  );
+}
+```
